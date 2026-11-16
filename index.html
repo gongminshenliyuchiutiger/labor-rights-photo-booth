@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勞動權益拍貼機 | Labor Rights Photo Booth</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: 多元拍貼機字體 (黑體、明體、圓體、文楷、手繪POP、童趣手寫) -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Hachi+Maru+Pop&family=Inter:wght@400;600;800&family=LXGW+WenKai+TC:wght@700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&family=Yusei+Magic&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 吉祥物霓虹發光與抖動動畫 */
+        @keyframes neon-jitter {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1.05);
+                filter: drop-shadow(0 0 8px #ff0055) drop-shadow(0 0 16px #00f0ff);
+            }
+            20% {
+                transform: translate(-3px, 2px) rotate(-4deg) scale(1.08);
+                filter: drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 24px #ffbe0b);
+            }
+            40% {
+                transform: translate(3px, -2px) rotate(4deg) scale(1.08);
+                filter: drop-shadow(0 0 10px #8338ec) drop-shadow(0 0 20px #3a86ff);
+            }
+            60% {
+                transform: translate(-2px, -3px) rotate(-3deg) scale(1.06);
+                filter: drop-shadow(0 0 14px #06d6a0) drop-shadow(0 0 28px #ff0055);
+            }
+            80% {
+                transform: translate(2px, 3px) rotate(3deg) scale(1.08);
+                filter: drop-shadow(0 0 12px #ffbe0b) drop-shadow(0 0 22px #8338ec);
+            }
+            100% {
+                transform: translate(0, 0) rotate(0deg) scale(1.05);
+                filter: drop-shadow(0 0 8px #ff0055) drop-shadow(0 0 16px #00f0ff);
+            }
+        }
+
+        #mascot-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 9999;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: filter 0.2s ease;
+        }
+
+        #mascot-container:active {
+            cursor: grabbing;
+        }
+
+        #mascot-img {
+            width: 90px;
+            height: auto;
+            transition: transform 0.2s ease;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            #mascot-img {
+                width: 115px;
+            }
+        }
+
+        #mascot-container:hover #mascot-img {
+            animation: neon-jitter 0.45s infinite linear;
+        }
+
+        /* 拍貼畫布容器 */
+        #canvas-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 540px;
+            aspect-ratio: 4 / 5;
+            margin: 0 auto;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            background-color: #1e293b;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+        }
+
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between selection:bg-amber-300 selection:text-slate-900">
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center text-xl shadow-md">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-wider flex items-center gap-2">
+                        勞動權益拍貼機
+                        <span class="text-xs font-bold bg-gradient-to-r from-rose-500 to-amber-500 text-white px-2.5 py-0.5 rounded-full tracking-widest shadow-sm">公民好神</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">捍衛職場尊嚴・打造專屬勞動權益宣言</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btn-undo" disabled class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-base transition flex items-center justify-center border border-slate-700" title="復原 (Ctrl+Z)" aria-label="復原">
+                    <i class="fa-solid fa-reply"></i>
+                </button>
+                <button id="btn-redo" disabled class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-base transition flex items-center justify-center border border-slate-700" title="重做 (Ctrl+Y)" aria-label="重做">
+                    <i class="fa-solid fa-share"></i>
+                </button>
+                <button id="btn-reset-all" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-base transition flex items-center justify-center border border-slate-700" title="重設全部" aria-label="重設全部">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button id="btn-download" class="w-10 h-10 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-base font-extrabold transition flex items-center justify-center shadow-md shadow-amber-400/20" title="下載拍貼" aria-label="下載拍貼">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 提示訊息框 (取代 alert) -->
+    <div id="toast-message" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-4">
+        <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 text-sm font-bold">
+            <i id="toast-icon" class="fa-solid fa-circle-info text-amber-400 text-lg"></i>
+            <span id="toast-text">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- 主要工作區 -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-grow">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- 左側：拍貼畫布、相機控制與勞動權益大使設定 -->
+            <div class="lg:col-span-6 flex flex-col items-center">
+                <div id="canvas-wrapper" class="ring-4 ring-white">
+                    <canvas id="booth-canvas" width="800" height="1000"></canvas>
+                    <!-- 隱藏的視訊串流元素 -->
+                    <video id="webcam-video" autoplay playsinline class="hidden"></video>
+                    <!-- 快門閃白特效遮罩 -->
+                    <div id="flash-overlay" class="pointer-events-none opacity-0 absolute inset-0 bg-white z-30 transition-opacity duration-200"></div>
+                    <!-- 倒數計時遮罩 -->
+                    <div id="countdown-overlay" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-20">
+                        <span id="countdown-number" class="text-8xl font-black text-amber-400 drop-shadow-[0_0_25px_rgba(251,191,36,0.8)]">3</span>
+                    </div>
+                </div>
+
+                <!-- 畫布操作提示 -->
+                <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5 font-medium text-center">
+                    <i class="fa-solid fa-hand-pointer text-amber-600"></i>
+                    提示：拖曳貼圖移動，點擊選取後可用右上角旋轉、右下角縮放，或使用下方按鈕 / 滾輪微調
+                </p>
+
+                <!-- 選取貼圖控制列 (動態顯示) -->
+                <div id="sticker-controls" class="hidden w-full max-w-[540px] mt-3 bg-white px-4 py-3 rounded-2xl shadow-md border border-slate-200 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> 調整選取項：
+                        </span>
+                        <button id="btn-sticker-smaller" class="px-2.5 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition" title="縮小">
+                            <i class="fa-solid fa-magnifying-glass-minus"></i> 縮小
+                        </button>
+                        <button id="btn-sticker-larger" class="px-2.5 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition" title="放大">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i> 放大
+                        </button>
+                        <button id="btn-sticker-rotate-left" class="px-2.5 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition" title="向左旋轉">
+                            <i class="fa-solid fa-rotate-left"></i> 左轉
+                        </button>
+                        <button id="btn-sticker-rotate" class="px-2.5 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition" title="向右旋轉">
+                            <i class="fa-solid fa-rotate-right"></i> 右轉
+                        </button>
+                        <button id="btn-sticker-delete" class="px-2.5 h-8 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 text-xs font-bold flex items-center gap-1 transition" title="刪除">
+                            <i class="fa-solid fa-trash-can"></i> 刪除
+                        </button>
+                    </div>
+
+                    <!-- 選取文字標語專用編輯區 (僅選取標語時顯示) -->
+                    <div id="slogan-editor" class="hidden pt-2.5 border-t border-slate-100 space-y-2">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="input-edit-slogan" maxlength="20" placeholder="編輯文字內容..."
+                                class="flex-grow px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-amber-400 focus:bg-white focus:outline-none text-xs font-bold text-slate-800">
+                            <div class="flex gap-1.5">
+                                <select id="select-edit-font" class="px-2 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none">
+                                    <option value="'Zen Maru Gothic', 'Noto Sans TC', sans-serif">可愛圓體</option>
+                                    <option value="'Yusei Magic', 'Noto Sans TC', sans-serif">手繪 POP 體</option>
+                                    <option value="'Hachi Maru Pop', 'Zen Maru Gothic', sans-serif">童趣手寫體</option>
+                                    <option value="'LXGW WenKai TC', 'Noto Serif TC', serif">手寫文楷體</option>
+                                    <option value="'Noto Serif TC', serif">復古明體</option>
+                                    <option value="'Noto Sans TC', sans-serif">俐落黑體</option>
+                                </select>
+                                <select id="select-edit-style" class="px-2 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none">
+                                    <option value="outline">立體無底字</option>
+                                    <option value="tape">紙膠帶貼紙</option>
+                                    <option value="comic">漫畫爆炸框</option>
+                                    <option value="neon">霓虹發光牌</option>
+                                    <option value="stamp">復古郵票框</option>
+                                    <option value="pill">糖果膠囊</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 pt-0.5">
+                            <span class="text-[11px] font-bold text-slate-400">快速換色：</span>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#e11d48] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#e11d48" data-color="#ffffff" title="熱血紅"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#f59e0b] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#f59e0b" data-color="#0f172a" title="正義金"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#2563eb] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#2563eb" data-color="#ffffff" title="守護藍"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#059669] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#059669" data-color="#ffffff" title="特休綠"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#7c3aed] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#7c3aed" data-color="#fde047" title="霓虹紫"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#ec4899] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#ec4899" data-color="#ffffff" title="拍貼粉"></button>
+                            <button type="button" class="edit-color-btn w-5 h-5 rounded-full bg-[#0f172a] border-2 border-white shadow-xs hover:scale-110 transition" data-bg="#0f172a" data-color="#38bdf8" title="極簡黑"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 相機與照片來源按鈕列 -->
+                <div class="w-full max-w-[540px] grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+                    <button id="btn-start-camera" class="py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-video"></i>
+                        <span>開啟相機</span>
+                    </button>
+                    <button id="btn-snap-photo" class="py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-camera"></i>
+                        <span>倒數自拍</span>
+                    </button>
+                    <label class="col-span-2 sm:col-span-1 py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer" title="四格模式可一次多選最多 4 張照片">
+                        <i class="fa-solid fa-image text-amber-500"></i>
+                        <span>上傳照片</span>
+                        <input type="file" id="input-upload-photo" accept="image/*" multiple class="hidden">
+                    </label>
+                </div>
+
+                <!-- 拍貼模式與濾鏡工具列 -->
+                <div class="w-full max-w-[540px] mt-4 bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-extrabold text-slate-600 mr-1"><i class="fa-solid fa-table-cells-large text-indigo-500"></i> 版型：</span>
+                            <button type="button" data-layout="single" class="layout-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold transition">單張海報</button>
+                            <button type="button" data-layout="grid4" class="layout-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">經典四格</button>
+                        </div>
+                        <div class="flex items-center gap-1 flex-wrap">
+                            <span class="text-xs font-extrabold text-slate-600 mr-1"><i class="fa-solid fa-wand-magic-sparkles text-rose-500"></i> 濾鏡：</span>
+                            <button type="button" data-filter="none" class="filter-btn active px-2 py-1 rounded-lg bg-amber-400 text-slate-900 text-[11px] font-bold transition">原圖</button>
+                            <button type="button" data-filter="fresh" class="filter-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition">清新</button>
+                            <button type="button" data-filter="warm" class="filter-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition">暖陽</button>
+                            <button type="button" data-filter="retro" class="filter-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition">復古</button>
+                            <button type="button" data-filter="bw" class="filter-btn px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition">黑白</button>
+                        </div>
+                    </div>
+
+                    <!-- 經典四格專用：第 1~4 格照片槽位選擇列 -->
+                    <div id="grid-slot-bar" class="hidden pt-2.5 border-t border-slate-100 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
+                            <span><i class="fa-solid fa-images text-indigo-500 mr-1"></i>選擇要拍攝或上傳的格子（可一次多選 4 張）：</span>
+                            <button type="button" id="btn-clear-grid" class="text-rose-500 hover:text-rose-600">清空四格</button>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" data-slot="0" class="grid-slot-btn py-1.5 px-2 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-indigo-700 text-xs font-extrabold transition flex items-center justify-center gap-1">
+                                <span>第 1 格</span>
+                            </button>
+                            <button type="button" data-slot="1" class="grid-slot-btn py-1.5 px-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold transition flex items-center justify-center gap-1">
+                                <span>第 2 格</span>
+                            </button>
+                            <button type="button" data-slot="2" class="grid-slot-btn py-1.5 px-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold transition flex items-center justify-center gap-1">
+                                <span>第 3 格</span>
+                            </button>
+                            <button type="button" data-slot="3" class="grid-slot-btn py-1.5 px-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold transition flex items-center justify-center gap-1">
+                                <span>第 4 格</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. 勞動權益大使設定 (移至左側畫布下方以平衡版面) -->
+                <div class="w-full max-w-[540px] mt-4 bg-white p-5 rounded-3xl shadow-sm border border-slate-200/80">
+                    <h2 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-id-badge"></i>
+                        </span>
+                        輸入「勞動權益大使」稱號
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-grow">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </span>
+                            <input type="text" id="input-ambassador" maxlength="14" placeholder="請輸入姓名或暱稱 (例如：快樂鯉魚)" 
+                                class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-amber-400 focus:bg-white focus:outline-none font-bold text-slate-800 transition">
+                        </div>
+                        <button id="btn-clear-ambassador" class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-eraser"></i>
+                            <span>清除</span>
+                        </button>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="toggle-1955-stamp" checked class="w-4 h-4 accent-emerald-600 rounded">
+                            <span class="text-xs font-bold text-slate-700">印上「1955 勞工諮詢專線」公益守護章</span>
+                        </label>
+                        <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">24小時免付費</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：裝飾與標語控制面板 -->
+            <div class="lg:col-span-6 space-y-6">
+
+                <!-- 職場身分防雷模板 (一鍵套用) -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                    <h2 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-compass"></i>
+                        </span>
+                        職場身分防雷模板 (一鍵套用＋必知重點)
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="persona-selector">
+                        <button type="button" data-persona="parttime" class="persona-btn py-2 px-2.5 rounded-2xl border-2 border-slate-200 hover:border-pink-400 bg-slate-50 hover:bg-pink-50/60 text-slate-700 font-bold text-xs flex flex-col items-center gap-1 transition">
+                            <i class="fa-solid fa-graduation-cap text-base text-pink-500"></i>
+                            <span>打工新鮮人</span>
+                        </button>
+                        <button type="button" data-persona="overtime" class="persona-btn py-2 px-2.5 rounded-2xl border-2 border-slate-200 hover:border-purple-400 bg-slate-50 hover:bg-purple-50/60 text-slate-700 font-bold text-xs flex flex-col items-center gap-1 transition">
+                            <i class="fa-solid fa-laptop-code text-base text-purple-600"></i>
+                            <span>加班上班族</span>
+                        </button>
+                        <button type="button" data-persona="safety" class="persona-btn py-2 px-2.5 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/60 text-slate-700 font-bold text-xs flex flex-col items-center gap-1 transition">
+                            <i class="fa-solid fa-helmet-safety text-base text-amber-600"></i>
+                            <span>職安守護者</span>
+                        </button>
+                        <button type="button" data-persona="union" class="persona-btn py-2 px-2.5 rounded-2xl border-2 border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50/60 text-slate-700 font-bold text-xs flex flex-col items-center gap-1 transition">
+                            <i class="fa-solid fa-people-group text-base text-rose-600"></i>
+                            <span>工會應援團</span>
+                        </button>
+                    </div>
+                    <div id="persona-tips" class="hidden mt-3 p-3 rounded-2xl bg-teal-50/80 border border-teal-200 text-xs text-slate-700 space-y-1">
+                        <!-- 由 JS 動態顯示防雷 3 重點 -->
+                    </div>
+                </div>
+
+                <!-- 2. 主題相框風格 (擴充至 8 款) -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                    <h2 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-border-all"></i>
+                        </span>
+                        選擇拍貼相框主題
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="frame-selector">
+                        <button data-frame="classic" class="frame-btn active py-2.5 px-3 rounded-2xl border-2 border-amber-400 bg-amber-50 text-slate-900 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-scale-balanced text-lg text-amber-600"></i>
+                            <span>正義金黃</span>
+                        </button>
+                        <button data-frame="union" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-rose-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-bullhorn text-lg text-rose-600"></i>
+                            <span>團結工會紅</span>
+                        </button>
+                        <button data-frame="modern" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-cyan-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-shield-halved text-lg text-cyan-600"></i>
+                            <span>職場守護藍</span>
+                        </button>
+                        <button data-frame="neon" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-purple-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-bolt text-lg text-purple-600"></i>
+                            <span>準時下班紫</span>
+                        </button>
+                        <button data-frame="sakura" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-pink-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-heart text-lg text-pink-500"></i>
+                            <span>青春拍貼粉</span>
+                        </button>
+                        <button data-frame="mint" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-leaf text-lg text-emerald-500"></i>
+                            <span>特休薄荷綠</span>
+                        </button>
+                        <button data-frame="retro" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-slate-400 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-film text-lg text-slate-700"></i>
+                            <span>復古底片黑</span>
+                        </button>
+                        <button data-frame="cyber" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-teal-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-wand-sparkles text-lg text-teal-500"></i>
+                            <span>賽博霓虹青</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. 勞動權益宣言標語與自訂拍貼文字 -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                    <h2 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-quote-left"></i>
+                        </span>
+                        拍貼標語 & 自訂手寫字 (可點擊加入畫布)
+                    </h2>
+
+                    <!-- 自訂拍貼文字工具列 -->
+                    <div class="mb-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="input-custom-slogan" maxlength="16" placeholder="輸入自訂拍貼文字 (如：今天準時下班！)"
+                                class="flex-grow px-3.5 py-2 rounded-xl bg-white border border-slate-200 focus:border-amber-400 focus:outline-none text-sm font-bold text-slate-800">
+                            <button id="btn-add-custom-slogan" class="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:opacity-90 text-white text-xs font-extrabold transition flex items-center justify-center gap-1.5 shadow-sm shrink-0">
+                                <i class="fa-solid fa-plus"></i> 加入文字
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <select id="select-custom-font" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 focus:outline-none">
+                                <option value="'Zen Maru Gothic', 'Noto Sans TC', sans-serif">可愛圓體</option>
+                                <option value="'Yusei Magic', 'Noto Sans TC', sans-serif">手繪 POP 體</option>
+                                <option value="'Hachi Maru Pop', 'Zen Maru Gothic', sans-serif">童趣手寫體</option>
+                                <option value="'LXGW WenKai TC', 'Noto Serif TC', serif">手寫文楷體</option>
+                                <option value="'Noto Serif TC', serif">復古明體</option>
+                                <option value="'Noto Sans TC', sans-serif">俐落黑體</option>
+                            </select>
+                            <select id="select-custom-style" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 focus:outline-none">
+                                <option value="outline">拍貼立體字 (無底框)</option>
+                                <option value="tape">紙膠帶貼紙</option>
+                                <option value="comic">漫畫爆炸框</option>
+                                <option value="neon">霓虹發光牌</option>
+                                <option value="stamp">復古郵票框</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="slogan-list">
+                        <!-- 由 JS 動態生成標語按鈕 -->
+                    </div>
+
+                    <!-- 勞動權益小百科 (點擊標語時聯動顯示法條與科普) -->
+                    <div id="law-wiki-box" class="mt-4 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center shrink-0 text-sm shadow-xs">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <div class="font-extrabold text-slate-800 flex items-center gap-2">
+                                <span id="wiki-title">勞動權益小百科</span>
+                                <span id="wiki-law" class="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 text-[10px] font-bold">點擊上方標語學法條</span>
+                            </div>
+                            <p id="wiki-desc" class="text-slate-600 leading-relaxed">每條標語背後都有《勞動基準法》或相關法規保障！點擊任意標語加入拍貼，即可查看對應的職場自保小知識。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 勞動權益專屬貼圖 (多元造型拍貼貼紙) -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-icons"></i>
+                            </span>
+                            拍貼裝飾貼圖
+                            <button type="button" id="btn-quiz-hint" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                                <i class="fa-solid fa-lock-open mr-0.5"></i> 挑戰解鎖隱藏貼圖
+                            </button>
+                        </h2>
+                        <button id="btn-clear-stickers" class="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1">
+                            <i class="fa-solid fa-trash"></i> 清空貼圖
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2.5" id="sticker-palette">
+                        <!-- 由 JS 動態生成貼圖按鈕 -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- 頁尾區塊 (包含 FB 粉絲專頁連結與版權宣告) -->
+    <footer class="bg-slate-900 text-slate-300 py-8 px-4 mt-12 border-t border-slate-800">
+        <div class="max-w-4xl mx-auto flex flex-col items-center justify-center text-center space-y-4">
+            
+            <!-- FB 粉絲專頁 ICON 快樂鯉魚秋老虎 -->
+            <a href="https://www.facebook.com/happyliyuchilltiger/" target="_blank" rel="noopener noreferrer" 
+               class="group inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-slate-800 hover:bg-[#1877F2] text-white font-bold text-sm sm:text-base transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-[#1877F2]/30 border border-slate-700 hover:border-[#1877F2]">
+                <i class="fa-brands fa-facebook text-xl sm:text-2xl text-[#1877F2] group-hover:text-white transition-colors"></i>
+                <span>快樂鯉魚秋老虎</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-70 group-hover:opacity-100"></i>
+            </a>
+
+            <!-- 版權宣告 -->
+            <p class="text-xs sm:text-sm text-slate-400 font-medium tracking-wide">
+                Copyright © Liyuchiutiger Gongminshen
+            </p>
+        </div>
+    </footer>
+
+    <!-- 勞權快問快答 Modal 彈窗 -->
+    <div id="quiz-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-trophy text-amber-300 text-xl"></i>
+                    <div>
+                        <h3 class="font-black text-base">公民好神・勞權快問快答</h3>
+                        <p class="text-[11px] text-emerald-100">答對 3 題立即解鎖 3 款隱藏版限定貼圖！</p>
+                    </div>
+                </div>
+                <button id="btn-close-quiz" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="quiz-body" class="p-6 space-y-4">
+                <!-- 由 JS 動態渲染題目與解析 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 左下角可拖曳霓虹抖動吉祥物 -->
+    <div id="mascot-container" title="拖曳我可以移動到任何地方喔！">
+        <img id="mascot-img" 
+             src="image/LiyuChillGuy.svg" 
+             alt="快樂鯉魚秋老虎吉祥物"
+             onerror="this.onerror=null; this.src='https://placehold.co/120x120/1e293b/fbbf24?text=LiyuChillGuy';">
+    </div>
+
+    <script>
+        /**
+         * 勞動權益拍貼機核心邏輯
+         * 使用純 Canvas 繪製照片、相框、勞動權益大使徽章、標語貼紙與 Font Awesome 向量貼圖
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM 元素參照 ---
+            const canvas = document.getElementById('booth-canvas');
+            const ctx = canvas.getContext('2d');
+            const video = document.getElementById('webcam-video');
+            const countdownOverlay = document.getElementById('countdown-overlay');
+            const countdownNumber = document.getElementById('countdown-number');
+
+            const inputAmbassador = document.getElementById('input-ambassador');
+            const btnClearAmbassador = document.getElementById('btn-clear-ambassador');
+            const btnStartCamera = document.getElementById('btn-start-camera');
+            const btnSnapPhoto = document.getElementById('btn-snap-photo');
+            const inputUploadPhoto = document.getElementById('input-upload-photo');
+            const btnDownload = document.getElementById('btn-download');
+            const btnResetAll = document.getElementById('btn-reset-all');
+            const btnClearStickers = document.getElementById('btn-clear-stickers');
+            const btnUndo = document.getElementById('btn-undo');
+            const btnRedo = document.getElementById('btn-redo');
+
+            // 自訂拍貼文字控制
+            const inputCustomSlogan = document.getElementById('input-custom-slogan');
+            const btnAddCustomSlogan = document.getElementById('btn-add-custom-slogan');
+            const selectCustomFont = document.getElementById('select-custom-font');
+            const selectCustomStyle = document.getElementById('select-custom-style');
+
+            // 貼圖微調控制列
+            const stickerControls = document.getElementById('sticker-controls');
+            const btnStickerSmaller = document.getElementById('btn-sticker-smaller');
+            const btnStickerLarger = document.getElementById('btn-sticker-larger');
+            const btnStickerRotateLeft = document.getElementById('btn-sticker-rotate-left');
+            const btnStickerRotate = document.getElementById('btn-sticker-rotate');
+            const btnStickerDelete = document.getElementById('btn-sticker-delete');
+
+            // --- 應用程式狀態 ---
+            const state = {
+                ambassadorName: '',
+                frameTheme: 'classic', // 8 種相框主題
+                layoutMode: 'single',  // 'single' | 'grid4'
+                filterMode: 'none',    // 'none' | 'fresh' | 'warm' | 'retro' | 'bw'
+                show1955Stamp: true,
+                quizUnlocked: localStorage.getItem('labor_booth_quiz_unlocked') === '1',
+                photoImage: null,      // 單張模式已拍攝或上傳的 Image 物件
+                gridPhotos: [null, null, null, null], // 經典四格模式 4 張獨立照片
+                activeGridSlot: 0,     // 目前正在拍攝/上傳的格子索引 (0~3)
+                isCameraActive: false,
+                stream: null,
+                // 畫布上的動態物件 (標語與貼圖)
+                items: [],
+                selectedItemId: null,
+                // 互動模式: 'none' | 'drag' | 'rotate' | 'scale'
+                interactionMode: 'none',
+                dragOffsetX: 0,
+                dragOffsetY: 0,
+                transformStartAngle: 0,
+                transformStartRotation: 0,
+                transformStartDist: 1,
+                transformStartScale: 1,
+                hasMovedOrTransformed: false
+            };
+
+            function updateGridSlotUI() {
+                const gridSlotBar = document.getElementById('grid-slot-bar');
+                if (!gridSlotBar) return;
+                gridSlotBar.classList.toggle('hidden', state.layoutMode !== 'grid4');
+                document.querySelectorAll('.grid-slot-btn').forEach(btn => {
+                    const idx = parseInt(btn.dataset.slot, 10);
+                    const hasPhoto = Boolean(state.gridPhotos[idx]);
+                    const isActive = idx === state.activeGridSlot;
+                    btn.className = `grid-slot-btn py-1.5 px-2 rounded-xl border-2 text-xs transition flex items-center justify-center gap-1 ${
+                        isActive
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700 font-extrabold'
+                            : (hasPhoto
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700 font-bold'
+                                : 'border-slate-200 bg-slate-50 text-slate-600 font-bold')
+                    }`;
+                    btn.innerHTML = hasPhoto
+                        ? `<i class="fa-solid fa-circle-check text-emerald-500 text-[11px]"></i><span>第 ${idx + 1} 格</span>`
+                        : `<span>第 ${idx + 1} 格</span>`;
+                });
+            }
+
+            // --- 復原 / 重做 (Undo / Redo) 系統 ---
+            const MAX_HISTORY = 40;
+            let undoStack = [];
+            let redoStack = [];
+
+            function createSnapshot() {
+                return {
+                    ambassadorName: state.ambassadorName,
+                    frameTheme: state.frameTheme,
+                    layoutMode: state.layoutMode,
+                    filterMode: state.filterMode,
+                    show1955Stamp: state.show1955Stamp,
+                    items: JSON.parse(JSON.stringify(state.items))
+                };
+            }
+
+            function saveHistory() {
+                undoStack.push(createSnapshot());
+                if (undoStack.length > MAX_HISTORY) {
+                    undoStack.shift();
+                }
+                redoStack = [];
+                updateHistoryButtons();
+            }
+
+            function applySnapshot(snapshot) {
+                state.ambassadorName = snapshot.ambassadorName;
+                inputAmbassador.value = snapshot.ambassadorName;
+                state.frameTheme = snapshot.frameTheme;
+                state.layoutMode = snapshot.layoutMode || 'single';
+                state.filterMode = snapshot.filterMode || 'none';
+                state.show1955Stamp = snapshot.show1955Stamp !== undefined ? snapshot.show1955Stamp : true;
+                state.items = JSON.parse(JSON.stringify(snapshot.items));
+
+                const toggle1955 = document.getElementById('toggle-1955-stamp');
+                if (toggle1955) toggle1955.checked = state.show1955Stamp;
+
+                // 同步相框、版型、濾鏡按鈕狀態
+                document.querySelectorAll('.frame-btn').forEach(b => {
+                    const active = b.dataset.frame === state.frameTheme;
+                    b.classList.toggle('active', active);
+                    b.classList.toggle('border-amber-400', active);
+                    b.classList.toggle('bg-amber-50', active);
+                    b.classList.toggle('border-slate-200', !active);
+                    b.classList.toggle('bg-white', !active);
+                });
+                document.querySelectorAll('.layout-btn').forEach(b => {
+                    const active = b.dataset.layout === state.layoutMode;
+                    b.classList.toggle('bg-indigo-600', active);
+                    b.classList.toggle('text-white', active);
+                    b.classList.toggle('bg-slate-100', !active);
+                    b.classList.toggle('text-slate-700', !active);
+                });
+                updateGridSlotUI();
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    const active = b.dataset.filter === state.filterMode;
+                    b.classList.toggle('bg-amber-400', active);
+                    b.classList.toggle('text-slate-900', active);
+                    b.classList.toggle('bg-slate-100', !active);
+                    b.classList.toggle('text-slate-700', !active);
+                });
+
+                // 檢查目前選取的物件是否還存在
+                if (!state.items.some(i => i.id === state.selectedItemId)) {
+                    selectItem(null);
+                }
+                updateHistoryButtons();
+            }
+
+            function undo() {
+                if (undoStack.length === 0) return;
+                redoStack.push(createSnapshot());
+                const prev = undoStack.pop();
+                applySnapshot(prev);
+                showToast('已復原上一步操作', 'fa-reply text-sky-400');
+            }
+
+            function redo() {
+                if (redoStack.length === 0) return;
+                undoStack.push(createSnapshot());
+                const next = redoStack.pop();
+                applySnapshot(next);
+                showToast('已重做操作', 'fa-share text-emerald-400');
+            }
+
+            function updateHistoryButtons() {
+                btnUndo.disabled = undoStack.length === 0;
+                btnRedo.disabled = redoStack.length === 0;
+            }
+
+            // --- 預設勞動權益拍貼標語資料 (含《勞動基準法》小百科) ---
+            const slogansData = [
+                {
+                    text: '拒絕過勞・準時下班', bg: '#f59e0b', color: '#0f172a', icon: 'fa-clock',
+                    font: "'Zen Maru Gothic', 'Noto Sans TC', sans-serif", style: 'tape',
+                    law: '《勞動基準法》第 30、32 條',
+                    tip: '每日正常工時不得超過 8 小時、每週不得超過 40 小時。加班須經工會或勞資會議同意，每月延長工時原則上限 46 小時。'
+                },
+                {
+                    text: '加班費一毛都不能少！', bg: '#e11d48', color: '#ffffff', icon: 'fa-sack-dollar',
+                    font: "'Yusei Magic', 'Noto Sans TC', sans-serif", style: 'comic',
+                    law: '《勞動基準法》第 24 條',
+                    tip: '平日加班前 2 小時加給 1/3 以上、第 3~4 小時加給 2/3 以上；雇主不可片面強制只能換補休不給加班費！'
+                },
+                {
+                    text: '同工同酬・職場零歧視', bg: '#2563eb', color: '#ffffff', icon: 'fa-scale-balanced',
+                    font: "'Noto Serif TC', serif", style: 'stamp',
+                    law: '《性別平等工作法》第 10 條',
+                    tip: '雇主對受僱者之薪資給付，不得因性別、性傾向、年齡、種族或婚姻狀況而有差別待遇，工作相同、價值相等者應同工同酬。'
+                },
+                {
+                    text: '特休是我應得的權利', bg: '#059669', color: '#ffffff', icon: 'fa-umbrella-beach',
+                    font: "'LXGW WenKai TC', 'Noto Serif TC', serif", style: 'outline',
+                    law: '《勞動基準法》第 38 條',
+                    tip: '特休由勞工自主排定！滿 6 個月即有 3 天、滿 1 年有 7 天。年度終結或契約終止未休完之特休，雇主必須折算工資發給。'
+                },
+                {
+                    text: '勞健保高薪低報母湯喔', bg: '#7c3aed', color: '#fde047', icon: 'fa-file-shield',
+                    font: "'Zen Maru Gothic', 'Noto Sans TC', sans-serif", style: 'neon',
+                    law: '《勞工保險條例》第 14、72 條',
+                    tip: '投保薪資應依「月薪資總額」申報，高薪低報會嚴重縮水未來的育嬰津貼、職災給付、退休金與勞退 6% 提繳！'
+                },
+                {
+                    text: '職場安全第一・拒絕職災', bg: '#ea580c', color: '#ffffff', icon: 'fa-helmet-safety',
+                    font: "'Noto Sans TC', sans-serif", style: 'pill',
+                    law: '《職業安全衛生法》第 6、20 條',
+                    tip: '雇主有義務提供必要之安全衛生設備與防護具，若工作場所發生立即危險，勞工有權依《職業安全衛生法》第 18 條退避至安全處所。'
+                },
+                {
+                    text: '下班後請勿已讀亂回！', bg: '#0f172a', color: '#38bdf8', icon: 'fa-mobile-screen-button',
+                    font: "'Hachi Maru Pop', 'Zen Maru Gothic', sans-serif", style: 'neon',
+                    law: '勞動部《勞工在事業場所外工作時間指導原則》',
+                    tip: '下班後若主管透過通訊軟體交辦工作並要求立即處理，即屬加班！記得截圖對話紀錄與完成時間作為出勤證據。'
+                },
+                {
+                    text: '團結力量大・支持工會', bg: '#dc2626', color: '#fef08a', icon: 'fa-hand-fist',
+                    font: "'Noto Serif TC', serif", style: 'comic',
+                    law: '《工會法》第 4、35 條',
+                    tip: '勞工均有組織及加入工會之權利，雇主不得因勞工加入工會、參與工會活動而予以解僱、降調、減薪或其他不利待遇。'
+                }
+            ];
+
+            // --- 預設拍貼機多元造型貼圖資料 (含 3 款挑戰解鎖限定貼圖) ---
+            const stickersData = [
+                { name: '正義天平', unicode: '\uf24e', faClass: 'fa-solid fa-scale-balanced', color: '#f59e0b', bg: '#1e293b', shape: 'stamp' },
+                { name: '工會大聲公', unicode: '\uf0a1', faClass: 'fa-solid fa-bullhorn', color: '#ffffff', bg: '#e11d48', shape: 'burst' },
+                { name: '捍衛拳頭', unicode: '\uf6de', faClass: 'fa-solid fa-hand-fist', color: '#fef08a', bg: '#dc2626', shape: 'burst' },
+                { name: '準時下班', unicode: '\uf017', faClass: 'fa-solid fa-clock', color: '#0f172a', bg: '#38bdf8', shape: 'circle' },
+                { name: '薪資保障', unicode: '\uf81d', faClass: 'fa-solid fa-sack-dollar', color: '#fef08a', bg: '#059669', shape: 'star' },
+                { name: '工安頭盔', unicode: '\uf807', faClass: 'fa-solid fa-helmet-safety', color: '#0f172a', bg: '#fbbf24', shape: 'stamp' },
+                { name: '職場盾牌', unicode: '\uf3ed', faClass: 'fa-solid fa-shield-halved', color: '#ffffff', bg: '#2563eb', shape: 'circle' },
+                { name: '友善愛心', unicode: '\uf004', faClass: 'fa-solid fa-heart', color: '#ffffff', bg: '#ec4899', shape: 'heart' },
+                { name: '特休海灘', unicode: '\uf5ca', faClass: 'fa-solid fa-umbrella-beach', color: '#ffffff', bg: '#0d9488', shape: 'circle' },
+                { name: '閃亮星芒', unicode: '\uf005', faClass: 'fa-solid fa-star', color: '#fde047', bg: 'transparent', shape: 'nostyle' },
+                { name: '拍貼皇冠', unicode: '\uf521', faClass: 'fa-solid fa-crown', color: '#fbbf24', bg: 'transparent', shape: 'nostyle' },
+                { name: '超級閃電', unicode: '\uf0e7', faClass: 'fa-solid fa-bolt', color: '#facc15', bg: '#7c3aed', shape: 'star' },
+                { name: '讚聲力挺', unicode: '\uf164', faClass: 'fa-solid fa-thumbs-up', color: '#0f172a', bg: '#a3e635', shape: 'burst' },
+                { name: '勞動榮耀', unicode: '\uf559', faClass: 'fa-solid fa-award', color: '#fef08a', bg: '#b45309', shape: 'star' },
+                { name: '合約把關', unicode: '\uf573', faClass: 'fa-solid fa-file-signature', color: '#ffffff', bg: '#7c3aed', shape: 'stamp' },
+                { name: '墨鏡酷臉', unicode: '\uf58a', faClass: 'fa-solid fa-face-laugh-wink', color: '#fde047', bg: 'transparent', shape: 'nostyle' },
+                { name: '彩虹應援', unicode: '\uf75b', faClass: 'fa-solid fa-rainbow', color: '#f472b6', bg: 'transparent', shape: 'nostyle' },
+                { name: '咖啡續命', unicode: '\uf0f4', faClass: 'fa-solid fa-mug-hot', color: '#ffffff', bg: '#92400e', shape: 'circle' },
+                // 限定解鎖貼圖
+                { name: '黃金正義槌', unicode: '\uf0e3', faClass: 'fa-solid fa-gavel', color: '#0f172a', bg: '#fbbf24', shape: 'burst', secret: true },
+                { name: '勞權達人鑽', unicode: '\uf3a5', faClass: 'fa-solid fa-gem', color: '#67e8f9', bg: 'transparent', shape: 'nostyle', secret: true },
+                { name: '公民好神火', unicode: '\uf06d', faClass: 'fa-solid fa-fire', color: '#fef08a', bg: '#e11d48', shape: 'star', secret: true }
+            ];
+
+            // --- 職場身分防雷模板資料 ---
+            const personaTemplates = {
+                parttime: {
+                    label: '打工新鮮人防雷 3 重點',
+                    frame: 'sakura',
+                    slogans: [2, 4], // 同工同酬、勞健保高薪低報母湯喔
+                    stickers: [0, 7, 9],
+                    tips: [
+                        '1. 試用期也有《勞動基準法》保障：時薪不得低於最低工資，且到職第一天就應投保勞保與提繳 6% 勞退。',
+                        '2. 國定假日出勤工資加倍發給；不得預扣薪資、不得收取保證金或扣留身分證件。',
+                        '3. 保留出勤打卡紀錄、班表與薪資明細，遇到欠薪可撥打 1955 或向勞工局申請勞資爭議調解。'
+                    ]
+                },
+                overtime: {
+                    label: '加班上班族防雷 3 重點',
+                    frame: 'neon',
+                    slogans: [0, 1, 6],
+                    stickers: [3, 4, 17],
+                    tips: [
+                        '1. 加班費與補休由「勞工」選擇，雇主不能強迫只能換補休；補休期限到了沒休完，仍須折發加班費。',
+                        '2. 下班後主管用 Line / Teams 交辦急件並要求回報，截圖對話與傳檔時間即可認定為加班工時。',
+                        '3. 特休假屬於勞工權益，離職或年度結算未休完的天數，雇主應依法折算工資發給。'
+                    ]
+                },
+                safety: {
+                    label: '職安守護者防雷 3 重點',
+                    frame: 'classic',
+                    slogans: [5, 3],
+                    stickers: [5, 6, 11],
+                    tips: [
+                        '1. 安全帽、反光背心、安全帶等防護具應由雇主免費提供，不得轉嫁由勞工自費購買。',
+                        '2. 上下班途中於合理時間與路徑發生交通事故（無重大違規），原則上亦屬通勤職災，享有職災給付。',
+                        '3. 發生職災醫療期間，雇主不得終止勞動契約，且應給予公傷病假與原領工資補償。'
+                    ]
+                },
+                union: {
+                    label: '工會應援團防雷 3 重點',
+                    frame: 'union',
+                    slogans: [7, 2],
+                    stickers: [1, 2, 12],
+                    tips: [
+                        '1. 雇主不得打壓、阻撓勞工籌組或加入工會，否則將構成「不當勞動行為」，可向勞動部申請裁決。',
+                        '2. 事業單位應依法定期召開勞資會議，關於加班上限、變形工時等事項皆須經工會或勞資會議同意。',
+                        '3. 團體協約能為勞工爭取優於《勞動基準法》的福利與分紅，團結發聲更有保障。'
+                    ]
+                }
+            };
+
+            // --- 勞權快問快答題庫 ---
+            const quizQuestions = [
+                {
+                    q: '公司規定「試用期三個月內不保勞保，正式錄取才保」，這樣合法嗎？',
+                    options: ['合法，試用期本來就沒有勞保', '違法！到職當日就必須加保勞保與提繳勞退'],
+                    answer: 1,
+                    explain: '《勞動基準法》與《勞工保險條例》皆無試用期免保規定！只要僱傭關係成立，雇主於勞工到職當日即應申報參加勞工保險及提繳 6% 勞工退休金。'
+                },
+                {
+                    q: '平日加班時，老闆可以規定「一律只能換補休，不能領加班費」嗎？',
+                    options: ['可以，公司規定最大', '不行！選擇領加班費或補休的權利在於「勞工」'],
+                    answer: 1,
+                    explain: '依《勞動基準法》第 32-1 條，勞工加班後應先產生加班費請求權，須經「勞工意願選擇」才可換取補休，雇主不可單方面強制只給補休。'
+                },
+                {
+                    q: '員工離職時，還有 5 天特休沒休完，公司可以說「離職自動作廢」嗎？',
+                    options: ['不可以！未休完的特休必須折算工資發給', '可以，沒休是員工自己放棄'],
+                    answer: 0,
+                    explain: '依《勞動基準法》第 38 條第 4 項，勞工之特別休假因年度終結或契約終止而未休之日數，雇主應發給工資，不得歸零作廢。'
+                },
+                {
+                    q: '老闆以「上班遲到 1 分鐘扣薪 500 元」作為懲罰，這樣合理合法嗎？',
+                    options: ['合理，這是公司管理規章', '違法！未出勤時間只能按比例不給薪，不可溢扣罰款'],
+                    answer: 1,
+                    explain: '工資應全額直接給付勞工（《勞動基準法》第 22、26 條）。遲到僅能依實際未提供勞務的時間按比例不發薪資，不能訂定懲罰性罰款或溢扣工資。'
+                },
+                {
+                    q: '打工族在國定假日（如端午節、國慶日）出勤上班，薪水應該怎麼算？',
+                    options: ['跟平常一樣時薪計算', '工資應加倍發給（兩倍薪）'],
+                    answer: 1,
+                    explain: '依《勞動基準法》第 39 條，國定假日出勤工資應加倍發給！即使是時薪制打工族也享有相同權利。'
+                },
+                {
+                    q: '遇到欠薪、違法解僱或不合理對待時，可以撥打哪支 24 小時免付費專線諮詢申訴？',
+                    options: ['1955 勞工諮詢申訴專線', '165 反詐騙專線'],
+                    answer: 0,
+                    explain: '「1955」是勞動部 24 小時免付費勞工諮詢申訴專線，提供法令諮詢、申訴受理與多國語言服務！'
+                }
+            ];
+
+            // --- 提示框工具函式 ---
+            let toastTimer = null;
+            function showToast(msg, iconClass = 'fa-circle-info text-amber-400') {
+                const toast = document.getElementById('toast-message');
+                const toastText = document.getElementById('toast-text');
+                const toastIcon = document.getElementById('toast-icon');
+                toastText.textContent = msg;
+                toastIcon.className = `fa-solid ${iconClass} text-lg`;
+                
+                toast.classList.remove('opacity-0', '-translate-y-4');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', '-translate-y-4');
+                }, 2600);
+            }
+
+            // --- 更新勞動權益小百科顯示 ---
+            function updateLawWiki(title, law, desc) {
+                const wikiTitle = document.getElementById('wiki-title');
+                const wikiLaw = document.getElementById('wiki-law');
+                const wikiDesc = document.getElementById('wiki-desc');
+                if (!wikiTitle) return;
+                wikiTitle.textContent = title;
+                wikiLaw.textContent = law;
+                wikiDesc.textContent = desc;
+            }
+
+            // --- 初始化標語與貼圖面板 ---
+            function renderStickerPalette() {
+                const stickerPalette = document.getElementById('sticker-palette');
+                stickerPalette.innerHTML = '';
+                stickersData.forEach((sticker) => {
+                    const isLocked = sticker.secret && !state.quizUnlocked;
+                    const btn = document.createElement('button');
+                    btn.className = `p-2 rounded-2xl border transition flex flex-col items-center justify-center gap-1.5 group shadow-xs ${
+                        isLocked
+                            ? 'border-dashed border-emerald-300 bg-emerald-50/50 hover:bg-emerald-50'
+                            : 'border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-white'
+                    }`;
+                    btn.title = isLocked ? `通過「勞權快問快答」即可解鎖「${sticker.name}」！` : `加入「${sticker.name}」貼圖`;
+
+                    const previewStyle = isLocked
+                        ? 'background:#d1fae5; color:#059669;'
+                        : (sticker.shape === 'nostyle'
+                            ? `color:${sticker.color}; text-shadow: 0 2px 6px rgba(15,23,42,0.45);`
+                            : `background:${sticker.bg}; color:${sticker.color};`);
+                    const shapeClass = sticker.shape === 'stamp' ? 'rounded-xl' : 'rounded-full';
+                    const iconHtml = isLocked ? '<i class="fa-solid fa-lock"></i>' : `<i class="${sticker.faClass}"></i>`;
+
+                    btn.innerHTML = `
+                        <div class="w-10 h-10 ${shapeClass} flex items-center justify-center text-lg shadow-sm group-hover:scale-110 transition-transform" style="${previewStyle}">
+                            ${iconHtml}
+                        </div>
+                        <span class="text-[11px] font-bold ${isLocked ? 'text-emerald-700' : 'text-slate-600'} truncate w-full text-center">${sticker.name}</span>
+                    `;
+                    btn.addEventListener('click', () => {
+                        if (isLocked) {
+                            openQuizModal();
+                        } else {
+                            addStickerToCanvas(sticker);
+                        }
+                    });
+                    stickerPalette.appendChild(btn);
+                });
+            }
+
+            function initPalettes() {
+                const sloganList = document.getElementById('slogan-list');
+                slogansData.forEach((slogan) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'p-3 rounded-2xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/60 text-left transition flex items-center gap-2.5 group shadow-xs';
+                    btn.innerHTML = `
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm shadow-xs" style="background:${slogan.bg}; color:${slogan.color}">
+                            <i class="fa-solid ${slogan.icon}"></i>
+                        </span>
+                        <span class="font-bold text-xs sm:text-sm text-slate-800 group-hover:text-slate-950" style="font-family:${slogan.font}">${slogan.text}</span>
+                    `;
+                    btn.addEventListener('click', () => {
+                        addSloganToCanvas(slogan);
+                        if (slogan.law && slogan.tip) {
+                            updateLawWiki(slogan.text, slogan.law, slogan.tip);
+                        }
+                    });
+                    sloganList.appendChild(btn);
+                });
+
+                renderStickerPalette();
+            }
+
+            // --- 新增標語至畫布 ---
+            function addSloganToCanvas(slogan) {
+                saveHistory();
+                const id = 'item_' + Date.now() + Math.random().toString(36).substr(2, 4);
+                const offsetX = (Math.random() - 0.5) * 120;
+                const offsetY = (Math.random() - 0.5) * 160;
+                state.items.push({
+                    id,
+                    type: 'slogan',
+                    text: slogan.text,
+                    bg: slogan.bg || '#e11d48',
+                    color: slogan.color || '#ffffff',
+                    font: slogan.font || "'Noto Sans TC', sans-serif",
+                    style: slogan.style || 'pill',
+                    x: canvas.width / 2 + offsetX,
+                    y: canvas.height * 0.35 + offsetY,
+                    scale: 1,
+                    rotation: (Math.random() - 0.5) * 0.16
+                });
+                selectItem(id);
+                showToast(`已加入標語：「${slogan.text}」`, 'fa-circle-plus text-emerald-400');
+            }
+
+            // --- 新增貼圖至畫布 ---
+            function addStickerToCanvas(sticker) {
+                saveHistory();
+                const id = 'item_' + Date.now() + Math.random().toString(36).substr(2, 4);
+                const offsetX = (Math.random() - 0.5) * 180;
+                const offsetY = (Math.random() - 0.5) * 180;
+                state.items.push({
+                    id,
+                    type: 'sticker',
+                    unicode: sticker.unicode,
+                    color: sticker.color,
+                    bg: sticker.bg,
+                    shape: sticker.shape || 'circle',
+                    x: canvas.width / 2 + offsetX,
+                    y: canvas.height / 2 + offsetY,
+                    scale: 1,
+                    rotation: (Math.random() - 0.5) * 0.25
+                });
+                selectItem(id);
+                showToast(`已加入貼圖：「${sticker.name}」`, 'fa-sparkles text-amber-400');
+            }
+
+            // --- 選取/取消選取物件 ---
+            const sloganEditor = document.getElementById('slogan-editor');
+            const inputEditSlogan = document.getElementById('input-edit-slogan');
+            const selectEditFont = document.getElementById('select-edit-font');
+            const selectEditStyle = document.getElementById('select-edit-style');
+
+            function selectItem(id) {
+                state.selectedItemId = id;
+                if (id) {
+                    const idx = state.items.findIndex(i => i.id === id);
+                    let selected = null;
+                    if (idx > -1) {
+                        const [item] = state.items.splice(idx, 1);
+                        state.items.push(item);
+                        selected = item;
+                    }
+                    stickerControls.classList.remove('hidden');
+
+                    if (selected && selected.type === 'slogan') {
+                        sloganEditor.classList.remove('hidden');
+                        inputEditSlogan.value = selected.text || '';
+                        selectEditFont.value = selected.font || "'Zen Maru Gothic', 'Noto Sans TC', sans-serif";
+                        selectEditStyle.value = selected.style || 'pill';
+                    } else {
+                        sloganEditor.classList.add('hidden');
+                    }
+                } else {
+                    stickerControls.classList.add('hidden');
+                    sloganEditor.classList.add('hidden');
+                }
+            }
+
+            // --- 相框主題配置 (8 款拍貼機主題) ---
+            const frameConfigs = {
+                classic: {
+                    borderOuter: '#f59e0b',
+                    borderInner: '#0f172a',
+                    headerBg: '#0f172a',
+                    headerText: '#fbbf24',
+                    badgeBg: '#fbbf24',
+                    badgeText: '#0f172a',
+                    title: 'LABOR RIGHTS BOOTH • 勞動權益拍貼機'
+                },
+                union: {
+                    borderOuter: '#e11d48',
+                    borderInner: '#ffffff',
+                    headerBg: '#be123c',
+                    headerText: '#fef08a',
+                    badgeBg: '#fef08a',
+                    badgeText: '#9f1239',
+                    title: 'SOLIDARITY FOREVER • 團結捍衛勞動權'
+                },
+                modern: {
+                    borderOuter: '#0284c7',
+                    borderInner: '#e0f2fe',
+                    headerBg: '#0369a1',
+                    headerText: '#ffffff',
+                    badgeBg: '#38bdf8',
+                    badgeText: '#0f172a',
+                    title: 'FAIR WORKPLACE • 尊嚴勞動友善職場'
+                },
+                neon: {
+                    borderOuter: '#7c3aed',
+                    borderInner: '#c4b5fd',
+                    headerBg: '#1e1b4b',
+                    headerText: '#e879f9',
+                    badgeBg: '#c084fc',
+                    badgeText: '#1e1b4b',
+                    title: 'WORK-LIFE BALANCE • 拒絕過勞準時下班'
+                },
+                sakura: {
+                    borderOuter: '#f472b6',
+                    borderInner: '#fdf2f8',
+                    headerBg: '#db2777',
+                    headerText: '#ffffff',
+                    badgeBg: '#fbcfe8',
+                    badgeText: '#9d174d',
+                    title: 'HAPPY WORKER • 青春拍貼快樂勞動'
+                },
+                mint: {
+                    borderOuter: '#10b981',
+                    borderInner: '#ecfdf5',
+                    headerBg: '#047857',
+                    headerText: '#d1fae5',
+                    badgeBg: '#6ee7b7',
+                    badgeText: '#064e3b',
+                    title: 'PAID LEAVE DAY • 特休萬歲清新生活'
+                },
+                retro: {
+                    borderOuter: '#1e293b',
+                    borderInner: '#cbd5e1',
+                    headerBg: '#0f172a',
+                    headerText: '#f8fafc',
+                    badgeBg: '#e2e8f0',
+                    badgeText: '#0f172a',
+                    title: 'FILM STUDIO • 經典勞動紀錄寫真'
+                },
+                cyber: {
+                    borderOuter: '#0d9488',
+                    borderInner: '#5eead4',
+                    headerBg: '#042f2e',
+                    headerText: '#2dd4bf',
+                    badgeBg: '#2dd4bf',
+                    badgeText: '#042f2e',
+                    title: 'FUTURE LABOR • 未來職場權益宣言'
+                }
+            };
+
+            // 取得濾鏡字串
+            function getCanvasFilterString() {
+                switch (state.filterMode) {
+                    case 'fresh': return 'brightness(1.08) contrast(1.05) saturate(1.25)';
+                    case 'warm': return 'sepia(0.22) saturate(1.3) brightness(1.04)';
+                    case 'retro': return 'sepia(0.45) contrast(1.15) brightness(0.95)';
+                    case 'bw': return 'grayscale(1) contrast(1.18)';
+                    default: return 'none';
+                }
+            }
+
+            // --- 繪製背景照片或預設示意畫面 (支援濾鏡與經典四格多張獨立照片) ---
+            function drawBackgroundMedia() {
+                const W = canvas.width;
+                const H = canvas.height;
+                const isVideoMirror = (state.isCameraActive && video.readyState >= 2);
+                const hasAnyGridPhoto = state.gridPhotos.some(Boolean);
+
+                if (state.layoutMode === 'grid4' && (hasAnyGridPhoto || isVideoMirror || state.photoImage)) {
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, W, H);
+
+                    const padTop = 120;
+                    const padBottom = 165;
+                    const padSide = 52;
+                    const gap = 14;
+                    const cellW = (W - padSide * 2 - gap) / 2;
+                    const cellH = (H - padTop - padBottom - gap) / 2;
+
+                    const cells = [
+                        { x: padSide, y: padTop, label: '01 知道權益' },
+                        { x: padSide + cellW + gap, y: padTop, label: '02 保留證據' },
+                        { x: padSide, y: padTop + cellH + gap, label: '03 勇敢申訴' },
+                        { x: padSide + cellW + gap, y: padTop + cellH + gap, label: '04 守護職場' }
+                    ];
+
+                    cells.forEach((cell, idx) => {
+                        const slotImg = state.gridPhotos[idx];
+                        ctx.save();
+                        roundRect(ctx, cell.x, cell.y, cellW, cellH, 12);
+                        ctx.clip();
+
+                        if (isVideoMirror && idx === state.activeGridSlot) {
+                            // 目前正在拍攝的格子顯示即時相機畫面
+                            ctx.filter = getCanvasFilterString();
+                            ctx.save();
+                            ctx.translate(cell.x + cellW, cell.y);
+                            ctx.scale(-1, 1);
+                            drawImageCover(ctx, video, 0, 0, cellW, cellH);
+                            ctx.restore();
+                        } else if (slotImg) {
+                            ctx.filter = getCanvasFilterString();
+                            drawImageCover(ctx, slotImg, cell.x, cell.y, cellW, cellH);
+                        } else if (isVideoMirror) {
+                            // 相機運作中但非當前拍攝格，顯示待機提示
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(cell.x, cell.y, cellW, cellH);
+                            ctx.font = '700 20px "Noto Sans TC", sans-serif';
+                            ctx.fillStyle = '#94a3b8';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(`第 ${idx + 1} 格待拍`, cell.x + cellW / 2, cell.y + cellH / 2);
+                        } else {
+                            // 空白格佔位提示
+                            ctx.fillStyle = idx === state.activeGridSlot ? '#334155' : '#1e293b';
+                            ctx.fillRect(cell.x, cell.y, cellW, cellH);
+                            ctx.font = '700 20px "Noto Sans TC", sans-serif';
+                            ctx.fillStyle = idx === state.activeGridSlot ? '#fbbf24' : '#94a3b8';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(`第 ${idx + 1} 格・待拍/上傳`, cell.x + cellW / 2, cell.y + cellH / 2);
+                        }
+                        ctx.restore();
+
+                        // 繪製四格教育步驟小標籤 (無濾鏡)
+                        ctx.save();
+                        const tagW = 112;
+                        const tagH = 24;
+                        roundRect(ctx, cell.x + 8, cell.y + cellH - tagH - 8, tagW, tagH, 8);
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+                        ctx.fill();
+                        ctx.font = '700 13px "Noto Sans TC", sans-serif';
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(cell.label, cell.x + 8 + tagW / 2, cell.y + cellH - tagH / 2 - 7);
+                        ctx.restore();
+                    });
+
+                    ctx.restore();
+                } else if (state.layoutMode === 'single' && (isVideoMirror || state.photoImage)) {
+                    ctx.save();
+                    ctx.filter = getCanvasFilterString();
+                    if (isVideoMirror) {
+                        ctx.translate(W, 0);
+                        ctx.scale(-1, 1);
+                        drawImageCover(ctx, video, 0, 0, W, H);
+                    } else {
+                        drawImageCover(ctx, state.photoImage, 0, 0, W, H);
+                    }
+                    ctx.restore();
+                } else {
+                    // 預設時尚漸層背景與引導提示
+                    const grad = ctx.createLinearGradient(0, 0, W, H);
+                    grad.addColorStop(0, '#1e293b');
+                    grad.addColorStop(0.5, '#334155');
+                    grad.addColorStop(1, '#0f172a');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, W, H);
+
+                    // 網格裝飾線
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+                    ctx.lineWidth = 2;
+                    for (let x = 0; x < W; x += 50) {
+                        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+                    }
+                    for (let y = 0; y < H; y += 50) {
+                        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+                    }
+
+                    // 中央提示圖示與文字
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+                    ctx.beginPath();
+                    ctx.arc(W / 2, H / 2 - 40, 75, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.font = '900 64px "Font Awesome 6 Free"';
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('\uf030', W / 2, H / 2 - 40);
+
+                    ctx.font = '700 28px "Noto Sans TC", sans-serif';
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText('請點擊下方「開啟相機」或「上傳照片」', W / 2, H / 2 + 70);
+
+                    ctx.font = '500 20px "Noto Sans TC", sans-serif';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText('也可直接加入標語與貼圖進行設計！', W / 2, H / 2 + 110);
+                    ctx.restore();
+                }
+            }
+
+            // 模擬 CSS object-fit: cover
+            function drawImageCover(ctx, img, x, y, w, h) {
+                const iw = img.videoWidth || img.width;
+                const ih = img.videoHeight || img.height;
+                if (!iw || !ih) return;
+                const r = Math.min(w / iw, h / ih);
+                let nw = iw * r, nh = ih * r, cx, cy, cw, ch, ar = 1;
+                if (nw < w) ar = w / nw;
+                if (Math.abs(ar - 1) < 1e-14 && nh < h) ar = h / nh;
+                nw *= ar;
+                nh *= ar;
+                cw = iw / (nw / w);
+                ch = ih / (nh / h);
+                cx = (iw - cw) * 0.5;
+                cy = (ih - ch) * 0.5;
+                if (cx < 0) cx = 0;
+                if (cy < 0) cy = 0;
+                if (cw > iw) cw = iw;
+                if (ch > ih) ch = ih;
+                ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+            }
+
+            // --- 繪製拍貼相框與「勞動權益大使 XXX」置中徽章 ---
+            function drawFrameAndBadge() {
+                const W = canvas.width;
+                const H = canvas.height;
+                const cfg = frameConfigs[state.frameTheme] || frameConfigs.classic;
+
+                ctx.save();
+                // 外框線
+                ctx.strokeStyle = cfg.borderOuter;
+                ctx.lineWidth = 36;
+                ctx.strokeRect(18, 18, W - 36, H - 36);
+
+                // 內細框線
+                ctx.strokeStyle = cfg.borderInner;
+                ctx.lineWidth = 6;
+                ctx.strokeRect(38, 38, W - 76, H - 76);
+
+                // 拍貼機邊框裝飾小圓點 (底片燈泡感)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+                for (let x = 60; x <= W - 60; x += 40) {
+                    ctx.beginPath(); ctx.arc(x, 18, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(x, H - 18, 4, 0, Math.PI * 2); ctx.fill();
+                }
+
+                // 頂部標題橫幅
+                const bannerW = W - 120;
+                const bannerH = 54;
+                const bannerX = 60;
+                const bannerY = 52;
+                roundRect(ctx, bannerX, bannerY, bannerW, bannerH, 16);
+                ctx.fillStyle = cfg.headerBg;
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = cfg.borderOuter;
+                ctx.stroke();
+
+                ctx.font = '800 22px "Fredoka", "Inter", "Noto Sans TC", sans-serif';
+                ctx.fillStyle = cfg.headerText;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(cfg.title, W / 2, bannerY + bannerH / 2 + 1);
+
+                // 若開啟「1955 勞工諮詢專線」公益守護章，繪製於認證欄上方右側
+                if (state.show1955Stamp) {
+                    const stampW = 246;
+                    const stampH = 30;
+                    const stampX = W - 55 - stampW;
+                    const stampY = H - 92 - 52 - stampH - 10;
+                    ctx.save();
+                    roundRect(ctx, stampX, stampY, stampW, stampH, 15);
+                    ctx.fillStyle = 'rgba(5, 150, 105, 0.92)';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+
+                    ctx.font = '700 13px "Noto Sans TC", sans-serif';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('☎ 勞工諮詢申訴專線 1955', stampX + stampW / 2, stampY + stampH / 2 + 1);
+                    ctx.restore();
+                }
+
+                // 底部「勞動權益大使 XXX」專屬認證欄 (整體置中，XXX 字體更大更特別)
+                const prefixText = '勞動權益大使';
+                const ambassadorVal = state.ambassadorName.trim() || '守護職場正義';
+
+                const footerH = 92;
+                const footerW = W - 110;
+                const footerX = 55;
+                const footerY = H - footerH - 52;
+
+                // 底部背板陰影
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+                ctx.shadowBlur = 16;
+                ctx.shadowOffsetY = 6;
+
+                roundRect(ctx, footerX, footerY, footerW, footerH, 22);
+                ctx.fillStyle = cfg.headerBg;
+                ctx.fill();
+
+                // 重置陰影並畫外框
+                ctx.shadowColor = 'transparent';
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = cfg.borderOuter;
+                ctx.stroke();
+
+                // 計算「獎章 + 勞動權益大使 + XXX」整體寬度以實現完美水平置中
+                const badgeRadius = 24;
+                const badgeGap = 14;
+                const textGap = 14;
+                let prefixSize = 24;
+                let nameSize = 40;
+                const maxTextW = footerW - (badgeRadius * 2 + badgeGap + textGap + 44);
+
+                const prefixFont = (s) => `700 ${s}px "Noto Sans TC", sans-serif`;
+                const nameFont = (s) => `900 ${s}px "Yusei Magic", "Zen Maru Gothic", "Noto Sans TC", sans-serif`;
+
+                while (nameSize > 22) {
+                    ctx.font = prefixFont(prefixSize);
+                    const pw = ctx.measureText(prefixText).width;
+                    ctx.font = nameFont(nameSize);
+                    const nw = ctx.measureText(ambassadorVal).width;
+                    if (pw + nw <= maxTextW) break;
+                    nameSize -= 2;
+                    prefixSize = Math.max(16, Math.round(nameSize * 0.6));
+                }
+
+                ctx.font = prefixFont(prefixSize);
+                const prefixW = ctx.measureText(prefixText).width;
+                ctx.font = nameFont(nameSize);
+                const nameW = ctx.measureText(ambassadorVal).width;
+
+                const totalContentW = badgeRadius * 2 + badgeGap + prefixW + textGap + nameW;
+                const startX = W / 2 - totalContentW / 2;
+
+                // 認證獎章圖示 (置於文字左側並一起置中)
+                const badgeCenterX = startX + badgeRadius;
+                const badgeCenterY = footerY + footerH / 2;
+                ctx.beginPath();
+                ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
+                ctx.fillStyle = cfg.badgeBg;
+                ctx.fill();
+
+                ctx.font = '900 22px "Font Awesome 6 Free"';
+                ctx.fillStyle = cfg.badgeText;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('\uf559', badgeCenterX, badgeCenterY);
+
+                // 「勞動權益大使」頭銜文字
+                const prefixX = startX + badgeRadius * 2 + badgeGap;
+                ctx.font = prefixFont(prefixSize);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(prefixText, prefixX, footerY + footerH / 2 + 2);
+
+                // 「XXX」主角姓名 (特色字體、更大字級、主題亮色與微發光效果)
+                const nameX = prefixX + prefixW + textGap;
+                ctx.font = nameFont(nameSize);
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = cfg.headerText;
+                ctx.fillText(ambassadorVal, nameX, footerY + footerH / 2 + 1);
+
+                ctx.restore();
+            }
+
+            // --- 形狀繪製輔助函式 (愛心、星星、爆炸鋸齒) ---
+            function drawStarPath(ctx, cx, cy, spikes, outerR, innerR) {
+                let rot = Math.PI / 2 * 3;
+                const step = Math.PI / spikes;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - outerR);
+                for (let i = 0; i < spikes; i++) {
+                    ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+                    rot += step;
+                    ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+                    rot += step;
+                }
+                ctx.lineTo(cx, cy - outerR);
+                ctx.closePath();
+            }
+
+            function drawHeartPath(ctx, cx, cy, size) {
+                ctx.beginPath();
+                const topCurveHeight = size * 0.3;
+                ctx.moveTo(cx, cy + size * 0.38);
+                ctx.bezierCurveTo(cx, cy + size * 0.38, cx - size * 0.55, cy + size * 0.05, cx - size * 0.55, cy - size * 0.2);
+                ctx.bezierCurveTo(cx - size * 0.55, cy - size * 0.52, cx - size * 0.1, cy - size * 0.52, cx, cy - topCurveHeight * 0.6);
+                ctx.bezierCurveTo(cx + size * 0.1, cy - size * 0.52, cx + size * 0.55, cy - size * 0.52, cx + size * 0.55, cy - size * 0.2);
+                ctx.bezierCurveTo(cx + size * 0.55, cy + size * 0.05, cx, cy + size * 0.38, cx, cy + size * 0.38);
+                ctx.closePath();
+            }
+
+            // 將區域座標轉換為畫布全域座標 (供手把碰撞偵測使用)
+            function localToCanvas(item, lx, ly) {
+                const cos = Math.cos(item.rotation);
+                const sin = Math.sin(item.rotation);
+                const sx = lx * item.scale;
+                const sy = ly * item.scale;
+                return {
+                    x: item.x + sx * cos - sy * sin,
+                    y: item.y + sx * sin + sy * cos
+                };
+            }
+
+            // --- 繪製所有動態標語與貼圖 ---
+            function drawItems() {
+                state.items.forEach((item) => {
+                    ctx.save();
+                    ctx.translate(item.x, item.y);
+                    ctx.rotate(item.rotation);
+                    ctx.scale(item.scale, item.scale);
+
+                    let boxHalfW = 60;
+                    let boxHalfH = 40;
+
+                    if (item.type === 'slogan') {
+                        const fontFamily = item.font || "'Zen Maru Gothic', 'Noto Sans TC', sans-serif";
+                        const styleType = item.style || 'pill';
+                        ctx.font = `900 32px ${fontFamily}`;
+                        const textMetrics = ctx.measureText(item.text);
+                        const padX = 28;
+                        const padY = 18;
+                        const boxW = textMetrics.width + padX * 2;
+                        const boxH = 32 + padY * 2;
+
+                        boxHalfW = boxW / 2;
+                        boxHalfH = boxH / 2;
+
+                        if (styleType === 'outline') {
+                            // 拍貼立體塗鴉字 (無底框、粗白邊＋彩色字體)
+                            ctx.shadowColor = 'rgba(0,0,0,0.45)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 4;
+                            ctx.lineJoin = 'round';
+                            ctx.lineWidth = 10;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.strokeText(item.text, 0, 2);
+
+                            ctx.shadowColor = 'transparent';
+                            ctx.fillStyle = item.bg;
+                            ctx.fillText(item.text, 0, 2);
+                        } else if (styleType === 'tape') {
+                            // 紙膠帶貼紙風格
+                            ctx.shadowColor = 'rgba(0,0,0,0.22)';
+                            ctx.shadowBlur = 8;
+                            ctx.shadowOffsetY = 4;
+                            ctx.fillStyle = item.bg;
+                            ctx.globalAlpha = 0.92;
+                            ctx.fillRect(-boxW / 2, -boxH / 2, boxW, boxH);
+                            ctx.globalAlpha = 1;
+
+                            // 兩側半透明膠帶切邊裝飾
+                            ctx.shadowColor = 'transparent';
+                            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([6, 4]);
+                            ctx.strokeRect(-boxW / 2 + 5, -boxH / 2 + 5, boxW - 10, boxH - 10);
+                            ctx.setLineDash([]);
+
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.text, 0, 2);
+                        } else if (styleType === 'comic') {
+                            // 漫畫硬派陰影框
+                            ctx.fillStyle = '#0f172a';
+                            roundRect(ctx, -boxW / 2 + 6, -boxH / 2 + 6, boxW, boxH, 10);
+                            ctx.fill();
+
+                            roundRect(ctx, -boxW / 2, -boxH / 2, boxW, boxH, 10);
+                            ctx.fillStyle = item.bg;
+                            ctx.fill();
+                            ctx.lineWidth = 4;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.stroke();
+
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.text, 0, 2);
+                        } else if (styleType === 'neon') {
+                            // 霓虹燈牌發光字
+                            ctx.shadowColor = item.color;
+                            ctx.shadowBlur = 18;
+                            roundRect(ctx, -boxW / 2, -boxH / 2, boxW, boxH, 20);
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fill();
+                            ctx.lineWidth = 3.5;
+                            ctx.strokeStyle = item.color;
+                            ctx.stroke();
+
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.text, 0, 2);
+                            ctx.shadowColor = 'transparent';
+                        } else if (styleType === 'stamp') {
+                            // 復古郵票雙框
+                            ctx.shadowColor = 'rgba(0,0,0,0.28)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 4;
+                            roundRect(ctx, -boxW / 2, -boxH / 2, boxW, boxH, 6);
+                            ctx.fillStyle = item.bg;
+                            ctx.fill();
+                            ctx.shadowColor = 'transparent';
+
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.setLineDash([8, 5]);
+                            roundRect(ctx, -boxW / 2 + 5, -boxH / 2 + 5, boxW - 10, boxH - 10, 4);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.text, 0, 2);
+                        } else {
+                            // pill 糖果膠囊
+                            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 4;
+                            roundRect(ctx, -boxW / 2, -boxH / 2, boxW, boxH, boxH / 2);
+                            ctx.fillStyle = item.bg;
+                            ctx.fill();
+
+                            ctx.shadowColor = 'transparent';
+                            ctx.lineWidth = 4;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.stroke();
+
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.text, 0, 2);
+                        }
+                    } else if (item.type === 'sticker') {
+                        const radius = 52;
+                        const shape = item.shape || 'circle';
+                        boxHalfW = radius + 4;
+                        boxHalfH = radius + 4;
+
+                        if (shape === 'nostyle') {
+                            // 純圖示立體發光貼紙 (無底板，更像拍貼機貼紙)
+                            ctx.shadowColor = 'rgba(15, 23, 42, 0.55)';
+                            ctx.shadowBlur = 12;
+                            ctx.shadowOffsetY = 4;
+                            ctx.font = '900 72px "Font Awesome 6 Free"';
+                            ctx.lineJoin = 'round';
+                            ctx.lineWidth = 10;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.strokeText(item.unicode, 0, 2);
+
+                            ctx.shadowColor = 'transparent';
+                            ctx.fillStyle = item.color;
+                            ctx.fillText(item.unicode, 0, 2);
+                        } else {
+                            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                            ctx.shadowBlur = 12;
+                            ctx.shadowOffsetY = 4;
+
+                            if (shape === 'star') {
+                                drawStarPath(ctx, 0, 0, 5, radius + 8, radius * 0.55);
+                            } else if (shape === 'burst') {
+                                drawStarPath(ctx, 0, 0, 12, radius + 6, radius * 0.78);
+                            } else if (shape === 'heart') {
+                                drawHeartPath(ctx, 0, 4, radius * 2.1);
+                            } else if (shape === 'stamp') {
+                                roundRect(ctx, -radius, -radius, radius * 2, radius * 2, 18);
+                            } else {
+                                ctx.beginPath();
+                                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                            }
+
+                            ctx.fillStyle = item.bg;
+                            ctx.fill();
+
+                            ctx.shadowColor = 'transparent';
+                            ctx.lineWidth = 5;
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.stroke();
+
+                            ctx.font = '900 44px "Font Awesome 6 Free"';
+                            ctx.fillStyle = item.color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(item.unicode, 0, shape === 'heart' ? -2 : 2);
+                        }
+                    }
+
+                    // 記錄碰撞邊界供點擊偵測
+                    item._halfW = boxHalfW;
+                    item._halfH = boxHalfH;
+
+                    // 若為選取狀態，繪製虛線選取框與 3 個互動控制點 (刪除 / 旋轉 / 縮放)
+                    if (item.id === state.selectedItemId) {
+                        const pad = 10;
+                        const rx = -boxHalfW - pad;
+                        const ry = -boxHalfH - pad;
+                        const rw = (boxHalfW + pad) * 2;
+                        const rh = (boxHalfH + pad) * 2;
+
+                        ctx.shadowColor = 'transparent';
+                        ctx.strokeStyle = '#38bdf8';
+                        ctx.lineWidth = 3 / item.scale;
+                        ctx.setLineDash([8 / item.scale, 6 / item.scale]);
+                        roundRect(ctx, rx, ry, rw, rh, 14);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // 計算控制點半徑 (維持螢幕固定視覺大小)
+                        const handleR = 16 / item.scale;
+                        const iconFontSize = Math.round(14 / item.scale);
+
+                        // 左上角：刪除按鈕
+                        drawHandle(ctx, rx, ry, handleR, '#e11d48', '\uf00d', iconFontSize);
+                        // 右上角：旋轉按鈕
+                        drawHandle(ctx, rx + rw, ry, handleR, '#f59e0b', '\uf01e', iconFontSize);
+                        // 右下角：縮放按鈕
+                        drawHandle(ctx, rx + rw, ry + rh, handleR, '#0284c7', '\uf424', iconFontSize);
+
+                        // 儲存全域座標供點擊偵測
+                        item._handles = {
+                            delete: localToCanvas(item, rx, ry),
+                            rotate: localToCanvas(item, rx + rw, ry),
+                            scale: localToCanvas(item, rx + rw, ry + rh),
+                            radius: 22
+                        };
+                    } else {
+                        item._handles = null;
+                    }
+
+                    ctx.restore();
+                });
+            }
+
+            function drawHandle(ctx, hx, hy, r, bgColor, unicode, fontSize) {
+                ctx.beginPath();
+                ctx.arc(hx, hy, r, 0, Math.PI * 2);
+                ctx.fillStyle = bgColor;
+                ctx.fill();
+                ctx.lineWidth = 2.5 / (r / 16);
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                ctx.font = `900 ${fontSize}px "Font Awesome 6 Free"`;
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(unicode, hx, hy + 1);
+            }
+
+            // 圓角矩形輔助函式
+            function roundRect(ctx, x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+
+            // --- 主渲染迴圈 ---
+            function renderLoop() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBackgroundMedia();
+                drawFrameAndBadge();
+                drawItems();
+                requestAnimationFrame(renderLoop);
+            }
+
+            // --- 相機與照片功能 ---
+            async function startCamera() {
+                try {
+                    if (state.stream) {
+                        state.stream.getTracks().forEach(track => track.stop());
+                    }
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1350 } },
+                        audio: false
+                    });
+                    video.srcObject = stream;
+                    state.stream = stream;
+                    state.isCameraActive = true;
+                    state.photoImage = null;
+                    btnStartCamera.innerHTML = '<i class="fa-solid fa-video"></i><span>相機運作中</span>';
+                    showToast('相機已開啟，擺好姿勢準備自拍吧！', 'fa-camera text-emerald-400');
+                } catch (err) {
+                    console.error('Camera Error:', err);
+                    showToast('無法開啟相機，請確認權限或改用「上傳照片」', 'fa-triangle-exclamation text-rose-400');
+                }
+            }
+
+            function takeSnapshot() {
+                if (!state.isCameraActive) {
+                    showToast('請先點擊「開啟相機」才能倒數自拍喔！', 'fa-video text-amber-400');
+                    return;
+                }
+                let count = 3;
+                countdownNumber.textContent = count;
+                countdownOverlay.classList.remove('hidden');
+
+                const timer = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        countdownNumber.textContent = count;
+                    } else {
+                        clearInterval(timer);
+                        countdownOverlay.classList.add('hidden');
+                        captureFrameFromVideo();
+                    }
+                }, 800);
+            }
+
+            // 快門閃白與合成音效 (無須外部音檔)
+            function triggerShutterEffect() {
+                const flashOverlay = document.getElementById('flash-overlay');
+                if (flashOverlay) {
+                    flashOverlay.classList.remove('opacity-0');
+                    flashOverlay.classList.add('opacity-90');
+                    setTimeout(() => {
+                        flashOverlay.classList.remove('opacity-90');
+                        flashOverlay.classList.add('opacity-0');
+                    }, 140);
+                }
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    const audioCtx = new AudioCtx();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.09);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.09);
+                } catch (_) {}
+            }
+
+            function captureFrameFromVideo() {
+                triggerShutterEffect();
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                const tCtx = tempCanvas.getContext('2d');
+                tCtx.translate(tempCanvas.width, 0);
+                tCtx.scale(-1, 1);
+                drawImageCover(tCtx, video, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                const img = new Image();
+                img.onload = () => {
+                    if (state.layoutMode === 'grid4') {
+                        const slot = state.activeGridSlot;
+                        state.gridPhotos[slot] = img;
+                        if (!state.photoImage) state.photoImage = img;
+
+                        // 找下一個尚未拍攝的格子，或依序前進
+                        const nextEmpty = state.gridPhotos.findIndex((p, i) => i > slot && !p);
+                        if (nextEmpty !== -1) {
+                            state.activeGridSlot = nextEmpty;
+                            updateGridSlotUI();
+                            showToast(`第 ${slot + 1} 格拍攝完成！請繼續拍第 ${nextEmpty + 1} 格`, 'fa-camera-retro text-emerald-400');
+                            return;
+                        }
+                        const anyEmpty = state.gridPhotos.findIndex(p => !p);
+                        if (anyEmpty !== -1) {
+                            state.activeGridSlot = anyEmpty;
+                            updateGridSlotUI();
+                            showToast(`第 ${slot + 1} 格拍攝完成！請繼續拍第 ${anyEmpty + 1} 格`, 'fa-camera-retro text-emerald-400');
+                            return;
+                        }
+                        // 4 格皆已完成，關閉相機
+                        updateGridSlotUI();
+                        state.isCameraActive = false;
+                        if (state.stream) {
+                            state.stream.getTracks().forEach(t => t.stop());
+                            state.stream = null;
+                        }
+                        btnStartCamera.innerHTML = '<i class="fa-solid fa-rotate-right"></i><span>重新拍攝</span>';
+                        showToast('經典四格 4 張自拍全部完成！', 'fa-circle-check text-emerald-400');
+                    } else {
+                        state.photoImage = img;
+                        state.isCameraActive = false;
+                        if (state.stream) {
+                            state.stream.getTracks().forEach(t => t.stop());
+                            state.stream = null;
+                        }
+                        btnStartCamera.innerHTML = '<i class="fa-solid fa-rotate-right"></i><span>重新拍攝</span>';
+                        showToast('咔嚓！自拍完成，快加上標語吧！', 'fa-camera-retro text-emerald-400');
+                    }
+                };
+                img.src = tempCanvas.toDataURL('image/png');
+            }
+
+            // 上傳本地照片 (支援四格模式一次多選最多 4 張)
+            inputUploadPhoto.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+
+                if (state.stream) {
+                    state.stream.getTracks().forEach(t => t.stop());
+                    state.stream = null;
+                }
+                state.isCameraActive = false;
+                btnStartCamera.innerHTML = '<i class="fa-solid fa-video"></i><span>開啟相機</span>';
+
+                if (state.layoutMode === 'grid4') {
+                    const filesToLoad = files.slice(0, 4);
+                    let loadedCount = 0;
+                    filesToLoad.forEach((file, idx) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const targetSlot = filesToLoad.length === 1
+                                    ? state.activeGridSlot
+                                    : idx;
+                                state.gridPhotos[targetSlot] = img;
+                                if (!state.photoImage) state.photoImage = img;
+                                loadedCount++;
+                                if (loadedCount === filesToLoad.length) {
+                                    if (filesToLoad.length === 1) {
+                                        state.activeGridSlot = (state.activeGridSlot + 1) % 4;
+                                        showToast(`已上傳至第 ${targetSlot + 1} 格！`, 'fa-image text-emerald-400');
+                                    } else {
+                                        showToast(`已成功載入 ${filesToLoad.length} 張四格照片！`, 'fa-images text-emerald-400');
+                                    }
+                                    updateGridSlotUI();
+                                }
+                            };
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            state.photoImage = img;
+                            showToast('照片上傳成功！', 'fa-image text-emerald-400');
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(files[0]);
+                }
+                e.target.value = '';
+            });
+
+            // --- 畫布觸控與滑鼠拖曳/旋轉/縮放互動 ---
+            function getCanvasCoords(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            }
+
+            // 檢查點擊位置是否在選取物件的局部矩形內 (支援旋轉)
+            function isPointInItem(pos, item) {
+                const dx = pos.x - item.x;
+                const dy = pos.y - item.y;
+                const cos = Math.cos(-item.rotation);
+                const sin = Math.sin(-item.rotation);
+                const lx = dx * cos - dy * sin;
+                const ly = dx * sin + dy * cos;
+                const hw = (item._halfW || 60) * item.scale;
+                const hh = (item._halfH || 40) * item.scale;
+                return Math.abs(lx) <= hw && Math.abs(ly) <= hh;
+            }
+
+            let pendingPreTransformSnapshot = null;
+
+            function handlePointerDown(clientX, clientY) {
+                const pos = getCanvasCoords(clientX, clientY);
+                state.hasMovedOrTransformed = false;
+
+                // 1. 優先檢查目前選取物件的控制點 (刪除 / 旋轉 / 縮放)
+                if (state.selectedItemId) {
+                    const selected = state.items.find(i => i.id === state.selectedItemId);
+                    if (selected && selected._handles) {
+                        const h = selected._handles;
+                        const hitR = h.radius;
+
+                        if (Math.hypot(pos.x - h.delete.x, pos.y - h.delete.y) <= hitR) {
+                            saveHistory();
+                            state.items = state.items.filter(i => i.id !== selected.id);
+                            selectItem(null);
+                            showToast('已移除選取的裝飾', 'fa-trash-can text-rose-400');
+                            return;
+                        }
+                        if (Math.hypot(pos.x - h.rotate.x, pos.y - h.rotate.y) <= hitR) {
+                            pendingPreTransformSnapshot = createSnapshot();
+                            state.interactionMode = 'rotate';
+                            state.transformStartAngle = Math.atan2(pos.y - selected.y, pos.x - selected.x);
+                            state.transformStartRotation = selected.rotation;
+                            return;
+                        }
+                        if (Math.hypot(pos.x - h.scale.x, pos.y - h.scale.y) <= hitR) {
+                            pendingPreTransformSnapshot = createSnapshot();
+                            state.interactionMode = 'scale';
+                            state.transformStartDist = Math.max(10, Math.hypot(pos.x - selected.x, pos.y - selected.y));
+                            state.transformStartScale = selected.scale;
+                            return;
+                        }
+                    }
+                }
+
+                // 2. 從最上層往下檢查是否點中物件本體
+                for (let i = state.items.length - 1; i >= 0; i--) {
+                    const item = state.items[i];
+                    if (isPointInItem(pos, item)) {
+                        selectItem(item.id);
+                        pendingPreTransformSnapshot = createSnapshot();
+                        state.interactionMode = 'drag';
+                        state.dragOffsetX = pos.x - item.x;
+                        state.dragOffsetY = pos.y - item.y;
+                        return;
+                    }
+                }
+
+                // 3. 點擊空白處取消選取
+                selectItem(null);
+            }
+
+            function handlePointerMove(clientX, clientY) {
+                if (state.interactionMode === 'none' || !state.selectedItemId) return;
+                const pos = getCanvasCoords(clientX, clientY);
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+
+                if (state.interactionMode === 'drag') {
+                    item.x = pos.x - state.dragOffsetX;
+                    item.y = pos.y - state.dragOffsetY;
+                    state.hasMovedOrTransformed = true;
+                } else if (state.interactionMode === 'rotate') {
+                    const curAngle = Math.atan2(pos.y - item.y, pos.x - item.x);
+                    item.rotation = state.transformStartRotation + (curAngle - state.transformStartAngle);
+                    state.hasMovedOrTransformed = true;
+                } else if (state.interactionMode === 'scale') {
+                    const curDist = Math.hypot(pos.x - item.x, pos.y - item.y);
+                    const ratio = curDist / state.transformStartDist;
+                    item.scale = Math.max(0.35, Math.min(3.0, state.transformStartScale * ratio));
+                    state.hasMovedOrTransformed = true;
+                }
+            }
+
+            function handlePointerUp() {
+                if (state.interactionMode !== 'none' && state.hasMovedOrTransformed && pendingPreTransformSnapshot) {
+                    undoStack.push(pendingPreTransformSnapshot);
+                    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+                    redoStack = [];
+                    updateHistoryButtons();
+                }
+                state.interactionMode = 'none';
+                state.hasMovedOrTransformed = false;
+                pendingPreTransformSnapshot = null;
+            }
+
+            canvas.addEventListener('mousedown', (e) => handlePointerDown(e.clientX, e.clientY));
+            window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+            window.addEventListener('mouseup', handlePointerUp);
+
+            // 滑鼠滾輪快速縮放選取中的貼圖/標語
+            let wheelHistoryTimer = null;
+            canvas.addEventListener('wheel', (e) => {
+                if (!state.selectedItemId) return;
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+                e.preventDefault();
+                if (!wheelHistoryTimer) {
+                    saveHistory();
+                }
+                clearTimeout(wheelHistoryTimer);
+                wheelHistoryTimer = setTimeout(() => { wheelHistoryTimer = null; }, 400);
+
+                const delta = e.deltaY < 0 ? 0.08 : -0.08;
+                item.scale = Math.max(0.35, Math.min(3.0, item.scale + delta));
+            }, { passive: false });
+
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    const t = e.touches[0];
+                    handlePointerDown(t.clientX, t.clientY);
+                }
+            }, { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (state.interactionMode !== 'none' && e.touches.length === 1) {
+                    const t = e.touches[0];
+                    handlePointerMove(t.clientX, t.clientY);
+                }
+            }, { passive: true });
+            window.addEventListener('touchend', handlePointerUp);
+
+            // --- 貼圖微調按鈕 ---
+            btnStickerSmaller.addEventListener('click', () => {
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+                saveHistory();
+                item.scale = Math.max(0.35, item.scale - 0.15);
+            });
+            btnStickerLarger.addEventListener('click', () => {
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+                saveHistory();
+                item.scale = Math.min(3.0, item.scale + 0.15);
+            });
+            btnStickerRotateLeft.addEventListener('click', () => {
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+                saveHistory();
+                item.rotation -= Math.PI / 12;
+            });
+            btnStickerRotate.addEventListener('click', () => {
+                const item = state.items.find(i => i.id === state.selectedItemId);
+                if (!item) return;
+                saveHistory();
+                item.rotation += Math.PI / 12;
+            });
+            btnStickerDelete.addEventListener('click', () => {
+                if (!state.selectedItemId) return;
+                saveHistory();
+                state.items = state.items.filter(i => i.id !== state.selectedItemId);
+                selectItem(null);
+                showToast('已移除選取的裝飾', 'fa-trash-can text-rose-400');
+            });
+
+            // --- 選取標語與自訂文字即時編輯事件 ---
+            let editSloganTimer = null;
+            inputEditSlogan.addEventListener('input', (e) => {
+                const item = state.items.find(i => i.id === state.selectedItemId && i.type === 'slogan');
+                if (!item) return;
+                if (!editSloganTimer) {
+                    saveHistory();
+                }
+                clearTimeout(editSloganTimer);
+                editSloganTimer = setTimeout(() => { editSloganTimer = null; }, 600);
+                item.text = e.target.value || ' ';
+            });
+
+            selectEditFont.addEventListener('change', (e) => {
+                const item = state.items.find(i => i.id === state.selectedItemId && i.type === 'slogan');
+                if (!item) return;
+                saveHistory();
+                item.font = e.target.value;
+            });
+
+            selectEditStyle.addEventListener('change', (e) => {
+                const item = state.items.find(i => i.id === state.selectedItemId && i.type === 'slogan');
+                if (!item) return;
+                saveHistory();
+                item.style = e.target.value;
+            });
+
+            document.querySelectorAll('.edit-color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = state.items.find(i => i.id === state.selectedItemId && i.type === 'slogan');
+                    if (!item) return;
+                    saveHistory();
+                    item.bg = btn.dataset.bg;
+                    item.color = btn.dataset.color;
+                });
+            });
+
+            // --- 自訂拍貼文字事件 ---
+            function handleAddCustomSlogan() {
+                const text = inputCustomSlogan.value.trim();
+                if (!text) {
+                    showToast('請先輸入要加入的文字喔！', 'fa-pen text-amber-400');
+                    inputCustomSlogan.focus();
+                    return;
+                }
+                const paletteColors = [
+                    { bg: '#e11d48', color: '#ffffff' },
+                    { bg: '#f59e0b', color: '#0f172a' },
+                    { bg: '#7c3aed', color: '#fde047' },
+                    { bg: '#0284c7', color: '#ffffff' },
+                    { bg: '#059669', color: '#ffffff' }
+                ];
+                const pick = paletteColors[Math.floor(Math.random() * paletteColors.length)];
+                addSloganToCanvas({
+                    text,
+                    bg: pick.bg,
+                    color: pick.color,
+                    font: selectCustomFont.value,
+                    style: selectCustomStyle.value
+                });
+                inputCustomSlogan.value = '';
+            }
+            btnAddCustomSlogan.addEventListener('click', handleAddCustomSlogan);
+            inputCustomSlogan.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleAddCustomSlogan();
+            });
+
+            // --- 復原 / 重做按鈕與鍵盤快捷鍵 ---
+            btnUndo.addEventListener('click', undo);
+            btnRedo.addEventListener('click', redo);
+
+            window.addEventListener('keydown', (e) => {
+                // 若正在輸入文字框中，不攔截鍵盤快捷鍵
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+                    return;
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) redo();
+                    else undo();
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    redo();
+                } else if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedItemId) {
+                    e.preventDefault();
+                    saveHistory();
+                    state.items = state.items.filter(i => i.id !== state.selectedItemId);
+                    selectItem(null);
+                    showToast('已移除選取的裝飾', 'fa-trash-can text-rose-400');
+                }
+            });
+
+            // --- 其他控制事件 ---
+            let ambassadorTimer = null;
+            inputAmbassador.addEventListener('input', (e) => {
+                if (!ambassadorTimer) {
+                    saveHistory();
+                }
+                clearTimeout(ambassadorTimer);
+                ambassadorTimer = setTimeout(() => { ambassadorTimer = null; }, 600);
+                state.ambassadorName = e.target.value;
+            });
+            btnClearAmbassador.addEventListener('click', () => {
+                if (!state.ambassadorName) return;
+                saveHistory();
+                inputAmbassador.value = '';
+                state.ambassadorName = '';
+            });
+
+            // 相框切換
+            function setFrameActiveUI(theme) {
+                document.querySelectorAll('.frame-btn').forEach(b => {
+                    const active = b.dataset.frame === theme;
+                    b.classList.toggle('active', active);
+                    b.classList.toggle('border-amber-400', active);
+                    b.classList.toggle('bg-amber-50', active);
+                    b.classList.toggle('border-slate-200', !active);
+                    b.classList.toggle('bg-white', !active);
+                });
+            }
+
+            document.querySelectorAll('.frame-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.frameTheme === btn.dataset.frame) return;
+                    saveHistory();
+                    setFrameActiveUI(btn.dataset.frame);
+                    state.frameTheme = btn.dataset.frame;
+                });
+            });
+
+            // 拍貼版型切換 (單張 / 四格)
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.layoutMode === btn.dataset.layout) return;
+                    saveHistory();
+                    state.layoutMode = btn.dataset.layout;
+                    document.querySelectorAll('.layout-btn').forEach(b => {
+                        const active = b.dataset.layout === state.layoutMode;
+                        b.classList.toggle('bg-indigo-600', active);
+                        b.classList.toggle('text-white', active);
+                        b.classList.toggle('bg-slate-100', !active);
+                        b.classList.toggle('text-slate-700', !active);
+                    });
+                    if (state.layoutMode === 'grid4' && state.photoImage && !state.gridPhotos[0]) {
+                        state.gridPhotos[0] = state.photoImage;
+                        state.activeGridSlot = 1;
+                    }
+                    updateGridSlotUI();
+                    showToast(state.layoutMode === 'grid4' ? '已切換為「經典四格拍貼」模式！可拍或傳 4 張不同照片' : '已切換為「單張海報」模式！', 'fa-table-cells-large text-indigo-400');
+                });
+            });
+
+            // 經典四格槽位選擇與清空
+            document.querySelectorAll('.grid-slot-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.activeGridSlot = parseInt(btn.dataset.slot, 10);
+                    updateGridSlotUI();
+                });
+            });
+            const btnClearGrid = document.getElementById('btn-clear-grid');
+            if (btnClearGrid) {
+                btnClearGrid.addEventListener('click', () => {
+                    state.gridPhotos = [null, null, null, null];
+                    state.activeGridSlot = 0;
+                    updateGridSlotUI();
+                    showToast('已清空四格照片，可重新拍攝或上傳', 'fa-broom text-amber-400');
+                });
+            }
+
+            // 拍貼濾鏡切換
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.filterMode === btn.dataset.filter) return;
+                    saveHistory();
+                    state.filterMode = btn.dataset.filter;
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        const active = b.dataset.filter === state.filterMode;
+                        b.classList.toggle('bg-amber-400', active);
+                        b.classList.toggle('text-slate-900', active);
+                        b.classList.toggle('bg-slate-100', !active);
+                        b.classList.toggle('text-slate-700', !active);
+                    });
+                });
+            });
+
+            // 1955 守護印章開關
+            const toggle1955Stamp = document.getElementById('toggle-1955-stamp');
+            if (toggle1955Stamp) {
+                toggle1955Stamp.addEventListener('change', (e) => {
+                    saveHistory();
+                    state.show1955Stamp = e.target.checked;
+                });
+            }
+
+            // 職場身分防雷模板一鍵套用
+            const personaTipsBox = document.getElementById('persona-tips');
+            document.querySelectorAll('.persona-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const key = btn.dataset.persona;
+                    const tpl = personaTemplates[key];
+                    if (!tpl) return;
+
+                    saveHistory();
+                    // 切換相框與套用標語/貼圖組合
+                    state.frameTheme = tpl.frame;
+                    setFrameActiveUI(tpl.frame);
+                    state.items = [];
+
+                    tpl.slogans.forEach((sIdx, i) => {
+                        const s = slogansData[sIdx];
+                        if (!s) return;
+                        state.items.push({
+                            id: 'item_tpl_' + Date.now() + '_' + i,
+                            type: 'slogan',
+                            text: s.text,
+                            bg: s.bg,
+                            color: s.color,
+                            font: s.font,
+                            style: s.style,
+                            x: canvas.width / 2 + (i % 2 === 0 ? -60 : 60),
+                            y: 230 + i * 160,
+                            scale: 0.92,
+                            rotation: (i % 2 === 0 ? -0.06 : 0.06)
+                        });
+                    });
+
+                    tpl.stickers.forEach((stIdx, i) => {
+                        const st = stickersData[stIdx];
+                        if (!st) return;
+                        const positions = [
+                            { x: 140, y: 200 },
+                            { x: 660, y: 260 },
+                            { x: 150, y: 740 }
+                        ];
+                        const p = positions[i % positions.length];
+                        state.items.push({
+                            id: 'item_tpl_st_' + Date.now() + '_' + i,
+                            type: 'sticker',
+                            unicode: st.unicode,
+                            color: st.color,
+                            bg: st.bg,
+                            shape: st.shape || 'circle',
+                            x: p.x,
+                            y: p.y,
+                            scale: 0.9,
+                            rotation: (i - 1) * 0.12
+                        });
+                    });
+                    selectItem(null);
+
+                    // 顯示防雷 3 重點
+                    personaTipsBox.innerHTML = `
+                        <div class="font-extrabold text-teal-800 flex items-center gap-1.5 mb-1">
+                            <i class="fa-solid fa-shield-heart"></i> ${tpl.label}
+                        </div>
+                        ${tpl.tips.map(t => `<p class="leading-relaxed">${t}</p>`).join('')}
+                    `;
+                    personaTipsBox.classList.remove('hidden');
+
+                    // 高亮按鈕
+                    document.querySelectorAll('.persona-btn').forEach(b => {
+                        b.classList.toggle('border-teal-500', b === btn);
+                        b.classList.toggle('bg-teal-50', b === btn);
+                    });
+
+                    showToast(`已套用「${btn.innerText.trim()}」防雷模板！`, 'fa-compass text-teal-400');
+                });
+            });
+
+            // --- 勞權快問快答挑戰邏輯 ---
+            const quizModal = document.getElementById('quiz-modal');
+            const quizBody = document.getElementById('quiz-body');
+            const btnOpenQuiz = document.getElementById('btn-open-quiz');
+            const btnQuizHint = document.getElementById('btn-quiz-hint');
+            const btnCloseQuiz = document.getElementById('btn-close-quiz');
+
+            let currentQuizList = [];
+            let currentQuizIdx = 0;
+            let currentQuizScore = 0;
+
+            function openQuizModal() {
+                const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5);
+                currentQuizList = shuffled.slice(0, 3);
+                currentQuizIdx = 0;
+                currentQuizScore = 0;
+                renderQuizStep();
+                quizModal.classList.remove('hidden');
+            }
+
+            function closeQuizModal() {
+                quizModal.classList.add('hidden');
+            }
+
+            function renderQuizStep() {
+                if (currentQuizIdx >= currentQuizList.length) {
+                    const passed = currentQuizScore === currentQuizList.length;
+                    if (passed && !state.quizUnlocked) {
+                        state.quizUnlocked = true;
+                        localStorage.setItem('labor_booth_quiz_unlocked', '1');
+                        renderStickerPalette();
+                    }
+                    quizBody.innerHTML = `
+                        <div class="text-center space-y-3 py-2">
+                            <div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl ${passed ? 'bg-amber-100 text-amber-500' : 'bg-slate-100 text-slate-500'}">
+                                <i class="fa-solid ${passed ? 'fa-crown' : 'fa-book-open'}"></i>
+                            </div>
+                            <h4 class="text-lg font-black text-slate-800">
+                                ${passed ? '恭喜全對！已解鎖 3 款限定貼圖！' : `本次答對 ${currentQuizScore} / ${currentQuizList.length} 題`}
+                            </h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                ${passed
+                                    ? '「黃金正義槌」、「勞權達人鑽」、「公民好神火」已加入您的貼圖庫，快點貼上拍貼吧！'
+                                    : '只要 3 題全對即可解鎖限定貼圖，再挑戰一次把勞權知識記起來吧！'}
+                            </p>
+                            <div class="flex justify-center gap-2 pt-2">
+                                ${!passed ? '<button id="btn-quiz-retry" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">再挑戰一次</button>' : ''}
+                                <button id="btn-quiz-done" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">回到拍貼機</button>
+                            </div>
+                        </div>
+                    `;
+                    const retryBtn = document.getElementById('btn-quiz-retry');
+                    if (retryBtn) retryBtn.addEventListener('click', openQuizModal);
+                    document.getElementById('btn-quiz-done').addEventListener('click', closeQuizModal);
+                    return;
+                }
+
+                const q = currentQuizList[currentQuizIdx];
+                quizBody.innerHTML = `
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+                        <span>第 ${currentQuizIdx + 1} / ${currentQuizList.length} 題</span>
+                        <span>目前答對：${currentQuizScore} 題</span>
+                    </div>
+                    <h4 class="text-base font-extrabold text-slate-800 leading-snug">${q.q}</h4>
+                    <div class="space-y-2.5" id="quiz-options">
+                        ${q.options.map((opt, idx) => `
+                            <button data-idx="${idx}" class="quiz-opt-btn w-full p-3.5 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 text-left text-sm font-bold text-slate-700 transition">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="quiz-feedback" class="hidden p-3.5 rounded-2xl text-xs leading-relaxed"></div>
+                `;
+
+                document.querySelectorAll('.quiz-opt-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const chosen = parseInt(btn.dataset.idx, 10);
+                        const isRight = chosen === q.answer;
+                        if (isRight) currentQuizScore++;
+
+                        document.querySelectorAll('.quiz-opt-btn').forEach((b, idx) => {
+                            b.disabled = true;
+                            if (idx === q.answer) {
+                                b.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                            } else if (idx === chosen && !isRight) {
+                                b.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-800');
+                            }
+                        });
+
+                        const fb = document.getElementById('quiz-feedback');
+                        fb.classList.remove('hidden');
+                        fb.className = `p-3.5 rounded-2xl text-xs leading-relaxed space-y-2 ${isRight ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-rose-50 border border-rose-200 text-rose-900'}`;
+                        fb.innerHTML = `
+                            <div class="font-extrabold flex items-center gap-1.5">
+                                <i class="fa-solid ${isRight ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'}"></i>
+                                ${isRight ? '答對了！' : '答錯囉，記住正確觀念：'}
+                            </div>
+                            <p>${q.explain}</p>
+                            <div class="text-right">
+                                <button id="btn-quiz-next" class="px-4 py-1.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-700 transition">
+                                    ${currentQuizIdx + 1 < currentQuizList.length ? '下一題' : '看結果'}
+                                </button>
+                            </div>
+                        `;
+                        document.getElementById('btn-quiz-next').addEventListener('click', () => {
+                            currentQuizIdx++;
+                            renderQuizStep();
+                        });
+                    });
+                });
+            }
+
+            if (btnOpenQuiz) btnOpenQuiz.addEventListener('click', openQuizModal);
+            if (btnQuizHint) btnQuizHint.addEventListener('click', openQuizModal);
+            if (btnCloseQuiz) btnCloseQuiz.addEventListener('click', closeQuizModal);
+
+            btnStartCamera.addEventListener('click', startCamera);
+            btnSnapPhoto.addEventListener('click', takeSnapshot);
+
+            btnClearStickers.addEventListener('click', () => {
+                if (state.items.length === 0) return;
+                saveHistory();
+                state.items = [];
+                selectItem(null);
+                showToast('已清空所有貼圖與標語', 'fa-broom text-amber-400');
+            });
+
+            btnResetAll.addEventListener('click', () => {
+                saveHistory();
+                state.items = [];
+                state.photoImage = null;
+                state.gridPhotos = [null, null, null, null];
+                state.activeGridSlot = 0;
+                state.ambassadorName = '';
+                inputAmbassador.value = '';
+                selectItem(null);
+                updateGridSlotUI();
+                showToast('已重設拍貼機狀態', 'fa-rotate-left text-amber-400');
+            });
+
+            // 下載拍貼圖片
+            btnDownload.addEventListener('click', () => {
+                // 下載前先取消選取虛線框，確保輸出畫面乾淨
+                const prevSelected = state.selectedItemId;
+                state.selectedItemId = null;
+                
+                // 同步重繪一幀無選取框畫面
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBackgroundMedia();
+                drawFrameAndBadge();
+                drawItems();
+
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    const fileName = state.ambassadorName.trim() 
+                        ? `勞動權益大使_${state.ambassadorName.trim()}_拍貼.png` 
+                        : '勞動權益拍貼機.png';
+                    link.download = fileName;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showToast('拍貼已成功下載儲存！', 'fa-circle-check text-emerald-400');
+                } catch (err) {
+                    console.error('Download error:', err);
+                    showToast('下載失敗，請稍後再試', 'fa-triangle-exclamation text-rose-400');
+                } finally {
+                    state.selectedItemId = prevSelected;
+                }
+            });
+
+            // --- 吉祥物自由拖曳移動功能 (支援滑鼠與觸控) ---
+            const mascot = document.getElementById('mascot-container');
+            let isMascotDragging = false;
+            let mascotStartX = 0;
+            let mascotStartY = 0;
+            let mascotInitialLeft = 0;
+            let mascotInitialTop = 0;
+
+            function onMascotDown(clientX, clientY) {
+                isMascotDragging = true;
+                const rect = mascot.getBoundingClientRect();
+                // 轉換為 left / top 定位以便全螢幕任意移動
+                mascot.style.bottom = 'auto';
+                mascot.style.right = 'auto';
+                mascot.style.left = rect.left + 'px';
+                mascot.style.top = rect.top + 'px';
+
+                mascotStartX = clientX;
+                mascotStartY = clientY;
+                mascotInitialLeft = rect.left;
+                mascotInitialTop = rect.top;
+            }
+
+            function onMascotMove(clientX, clientY) {
+                if (!isMascotDragging) return;
+                const dx = clientX - mascotStartX;
+                const dy = clientY - mascotStartY;
+
+                let newLeft = mascotInitialLeft + dx;
+                let newTop = mascotInitialTop + dy;
+
+                // 限制在視窗可視範圍內
+                const maxLeft = window.innerWidth - mascot.offsetWidth;
+                const maxTop = window.innerHeight - mascot.offsetHeight;
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                newTop = Math.max(0, Math.min(newTop, maxTop));
+
+                mascot.style.left = newLeft + 'px';
+                mascot.style.top = newTop + 'px';
+            }
+
+            function onMascotUp() {
+                isMascotDragging = false;
+            }
+
+            mascot.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                onMascotDown(e.clientX, e.clientY);
+            });
+            window.addEventListener('mousemove', (e) => onMascotMove(e.clientX, e.clientY));
+            window.addEventListener('mouseup', onMascotUp);
+
+            mascot.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    const t = e.touches[0];
+                    onMascotDown(t.clientX, t.clientY);
+                }
+            }, { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (isMascotDragging && e.touches.length === 1) {
+                    const t = e.touches[0];
+                    onMascotMove(t.clientX, t.clientY);
+                }
+            }, { passive: true });
+            window.addEventListener('touchend', onMascotUp);
+
+            // 啟動應用程式
+            initPalettes();
+            // 確保 Font Awesome 字型載入完成後再開始渲染循環
+            document.fonts.ready.then(() => {
+                renderLoop();
+            });
+        });
+    </script>
+</body>
+</html>
