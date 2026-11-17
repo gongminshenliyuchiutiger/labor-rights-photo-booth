@@ -260,13 +260,21 @@
                     </button>
                     <button id="btn-snap-photo" class="py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-camera"></i>
-                        <span>倒數自拍</span>
+                        <span id="snap-btn-label">倒數 3 秒</span>
                     </button>
                     <label class="col-span-2 sm:col-span-1 py-3 px-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer" title="四格模式可一次多選最多 4 張照片">
                         <i class="fa-solid fa-image text-amber-500"></i>
                         <span>上傳照片</span>
                         <input type="file" id="input-upload-photo" accept="image/*" multiple class="hidden">
                     </label>
+                </div>
+
+                <!-- 自拍倒數秒數選擇列 -->
+                <div class="w-full max-w-[540px] mt-2.5 flex items-center justify-center gap-2 text-xs">
+                    <span class="font-bold text-slate-500"><i class="fa-solid fa-stopwatch text-rose-500 mr-1"></i>自拍模式：</span>
+                    <button type="button" data-delay="0" class="snap-delay-btn px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-rose-300 text-slate-700 font-bold transition">直接自拍</button>
+                    <button type="button" data-delay="3" class="snap-delay-btn active px-2.5 py-1 rounded-full bg-rose-600 border border-rose-600 text-white font-bold transition">倒數 3 秒</button>
+                    <button type="button" data-delay="5" class="snap-delay-btn px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-rose-300 text-slate-700 font-bold transition">倒數 5 秒</button>
                 </div>
 
                 <!-- 拍貼模式與濾鏡工具列 -->
@@ -390,7 +398,72 @@
                     </div>
                 </div>
 
-                <!-- 2. 主題相框風格 (擴充至 8 款) -->
+                <!-- 求職防騙「三備七不」專區 (可收納開合) -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border-2 border-orange-200/90">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <button type="button" id="btn-toggle-antiscam-title" class="text-left flex items-center gap-2 group">
+                            <span class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-sm shrink-0">
+                                <i class="fa-solid fa-shield-cat"></i>
+                            </span>
+                            <span class="text-base font-extrabold text-slate-800 group-hover:text-orange-700 transition">求職防騙「三備七不」專區</span>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="btn-apply-antiscam" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:opacity-90 text-white text-xs font-extrabold transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 一鍵套用防騙版型
+                            </button>
+                            <button type="button" id="btn-toggle-antiscam" class="px-2.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold transition flex items-center gap-1 border border-orange-200" aria-expanded="false" title="收納或展開三備七不專區">
+                                <span id="antiscam-toggle-text">展開</span>
+                                <i id="antiscam-toggle-icon" class="fa-solid fa-chevron-up rotate-180 transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="antiscam-content" class="hidden mt-4 space-y-4">
+                        <!-- 三備按鈕區 -->
+                        <div>
+                            <div class="text-xs font-extrabold text-sky-700 mb-2 flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-sky-100">求職三備</span>
+                                <span class="text-[11px] font-medium text-slate-500">面試前先做好 3 項準備（點擊加入標語並看說明）</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2" id="antiscam-three-prep">
+                                <!-- 由 JS 動態生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 七不按鈕區 -->
+                        <div>
+                            <div class="text-xs font-extrabold text-rose-700 mb-2 flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-rose-100">求職七不</span>
+                                <span class="text-[11px] font-medium text-slate-500">面試時堅守 7 個原則（點擊加入標語並看說明）</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="antiscam-seven-no">
+                                <!-- 由 JS 動態生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 三備七不專屬圖示貼圖 -->
+                        <div>
+                            <div class="text-xs font-extrabold text-orange-700 mb-2 flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md bg-orange-100">防騙圖示</span>
+                                <span class="text-[11px] font-medium text-slate-500">點擊加入三備七不專屬貼圖</span>
+                            </div>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2" id="antiscam-stickers">
+                                <!-- 由 JS 動態生成 -->
+                            </div>
+                        </div>
+
+                        <!-- 三備七不詳細說明顯示區 -->
+                        <div id="antiscam-detail-box" class="p-3.5 rounded-2xl bg-orange-50/90 border border-orange-200 text-xs space-y-1">
+                            <div class="font-extrabold text-orange-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-orange-600"></i>
+                                <span id="antiscam-detail-title">求職防騙「三備七不」小叮嚀</span>
+                            </div>
+                            <p id="antiscam-detail-desc" class="text-slate-700 leading-relaxed">點擊上方任一「三備」或「七不」項目，即可在畫布貼上防騙標語，並在此查看完整防騙說明！</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 主題相框風格 (擴充至 9 款) -->
                 <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
                     <h2 class="text-base font-extrabold text-slate-800 mb-3 flex items-center gap-2">
                         <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
@@ -398,7 +471,7 @@
                         </span>
                         選擇拍貼相框主題
                     </h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="frame-selector">
+                    <div class="grid grid-cols-3 gap-2.5" id="frame-selector">
                         <button data-frame="classic" class="frame-btn active py-2.5 px-3 rounded-2xl border-2 border-amber-400 bg-amber-50 text-slate-900 font-bold text-xs flex flex-col items-center gap-1.5 transition">
                             <i class="fa-solid fa-scale-balanced text-lg text-amber-600"></i>
                             <span>正義金黃</span>
@@ -430,6 +503,10 @@
                         <button data-frame="cyber" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-teal-300 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
                             <i class="fa-solid fa-wand-sparkles text-lg text-teal-500"></i>
                             <span>賽博霓虹青</span>
+                        </button>
+                        <button data-frame="antiscam" class="frame-btn py-2.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-orange-400 bg-white text-slate-700 font-bold text-xs flex flex-col items-center gap-1.5 transition">
+                            <i class="fa-solid fa-triangle-exclamation text-lg text-orange-500"></i>
+                            <span>三備七不防騙</span>
                         </button>
                     </div>
                 </div>
@@ -1003,6 +1080,195 @@
                 });
             }
 
+            // --- 求職防騙「三備七不」專區資料 ---
+            const threePrepData = [
+                {
+                    key: '要確定',
+                    slogan: '三備｜要確定公司背景',
+                    icon: 'fa-magnifying-glass',
+                    bg: '#0284c7',
+                    color: '#ffffff',
+                    font: "'Zen Maru Gothic', 'Noto Sans TC', sans-serif",
+                    style: 'stamp',
+                    desc: '事先蒐集應徵公司資訊，了解公司經營背景及自己想要應徵的工作職務內容。'
+                },
+                {
+                    key: '要存疑',
+                    slogan: '三備｜高薪輕鬆要存疑',
+                    icon: 'fa-triangle-exclamation',
+                    bg: '#ea580c',
+                    color: '#ffffff',
+                    font: "'Yusei Magic', 'Noto Sans TC', sans-serif",
+                    style: 'comic',
+                    desc: '檢視欲應徵公司如有以下情形，就應提高警覺，以免受騙：1.連續數週或數月刊登徵人廣告。2.徵人廣告標榜不合乎常情的優厚待遇，但是公司業務、工作內容模糊不確定；或者強調工作輕鬆、免經驗、可貸款。3.求才廣告僅留公司名稱及地址或只留電話、聯絡人、郵政信箱、手機號碼。'
+                },
+                {
+                    key: '要陪同',
+                    slogan: '三備｜面試要親友陪同',
+                    icon: 'fa-user-group',
+                    bg: '#059669',
+                    color: '#ffffff',
+                    font: "'LXGW WenKai TC', 'Noto Serif TC', serif",
+                    style: 'tape',
+                    desc: '面試時可以請朋友、家人陪同前往(在面試地點外等待)，或事先告知親友欲前往面試之地點，或開啟手機定位。若是面試地點不尋常或中途藉故要求換面試地點，恐有人身安全疑慮。'
+                }
+            ];
+
+            const sevenNoData = [
+                {
+                    key: '不繳錢',
+                    slogan: '七不｜不繳錢',
+                    icon: 'fa-hand-holding-dollar',
+                    bg: '#e11d48',
+                    color: '#ffffff',
+                    font: "'Yusei Magic', 'Noto Sans TC', sans-serif",
+                    style: 'comic',
+                    desc: '不繳交任何不知用途之費用。'
+                },
+                {
+                    key: '不購買',
+                    slogan: '七不｜不購買產品',
+                    icon: 'fa-cart-shopping',
+                    bg: '#db2777',
+                    color: '#ffffff',
+                    font: "'Zen Maru Gothic', 'Noto Sans TC', sans-serif",
+                    style: 'pill',
+                    desc: '不購買公司以任何名目要求購買之有形、無形的產品。'
+                },
+                {
+                    key: '不辦卡',
+                    slogan: '七不｜不辦卡',
+                    icon: 'fa-credit-card',
+                    bg: '#7c3aed',
+                    color: '#fde047',
+                    font: "'Noto Sans TC', sans-serif",
+                    style: 'neon',
+                    desc: '不要答應求職公司之要求，在當場辦理信用卡。'
+                },
+                {
+                    key: '不簽約',
+                    slogan: '七不｜不隨便簽約',
+                    icon: 'fa-file-circle-xmark',
+                    bg: '#2563eb',
+                    color: '#ffffff',
+                    font: "'Noto Serif TC', serif",
+                    style: 'stamp',
+                    desc: '不簽署任何文件、契約，而且表示想要攜回看仔細再決定。'
+                },
+                {
+                    key: '證件不離身',
+                    slogan: '七不｜證件不離身',
+                    icon: 'fa-id-card',
+                    bg: '#d97706',
+                    color: '#0f172a',
+                    font: "'Yusei Magic', 'Noto Sans TC', sans-serif",
+                    style: 'tape',
+                    desc: '證件及信用卡應隨身攜帶，不給求職公司藉故保管。'
+                },
+                {
+                    key: '不飲用',
+                    slogan: '七不｜不飲用不明飲品',
+                    icon: 'fa-mug-saucer',
+                    bg: '#0f172a',
+                    color: '#38bdf8',
+                    font: "'Hachi Maru Pop', 'Zen Maru Gothic', sans-serif",
+                    style: 'neon',
+                    desc: '不飲用酒類及他人提供之不明飲料、食物。'
+                },
+                {
+                    key: '不非法工作',
+                    slogan: '七不｜不非法工作',
+                    icon: 'fa-ban',
+                    bg: '#dc2626',
+                    color: '#fef08a',
+                    font: "'Noto Serif TC', serif",
+                    style: 'comic',
+                    desc: '不從事違法工作或於非法公司工作。'
+                }
+            ];
+
+            const antiscamStickersData = [
+                { name: '查證背景', unicode: '\uf002', faClass: 'fa-solid fa-magnifying-glass', color: '#ffffff', bg: '#0284c7', shape: 'circle' },
+                { name: '提高警覺', unicode: '\uf071', faClass: 'fa-solid fa-triangle-exclamation', color: '#0f172a', bg: '#f59e0b', shape: 'burst' },
+                { name: '親友陪同', unicode: '\uf500', faClass: 'fa-solid fa-user-group', color: '#ffffff', bg: '#059669', shape: 'circle' },
+                { name: '證件守護', unicode: '\uf2c2', faClass: 'fa-solid fa-id-card', color: '#fef08a', bg: '#ea580c', shape: 'stamp' },
+                { name: '拒簽拒買', unicode: '\uf05e', faClass: 'fa-solid fa-ban', color: '#ffffff', bg: '#e11d48', shape: 'burst' },
+                { name: '防騙盾牌', unicode: '\uf3ed', faClass: 'fa-solid fa-shield-halved', color: '#ffffff', bg: '#7c3aed', shape: 'star' }
+            ];
+
+            function updateAntiscamDetail(title, desc) {
+                const tEl = document.getElementById('antiscam-detail-title');
+                const dEl = document.getElementById('antiscam-detail-desc');
+                if (tEl) tEl.textContent = title;
+                if (dEl) dEl.textContent = desc;
+            }
+
+            function initAntiscamSection() {
+                const threeBox = document.getElementById('antiscam-three-prep');
+                const sevenBox = document.getElementById('antiscam-seven-no');
+                const stickerBox = document.getElementById('antiscam-stickers');
+
+                if (threeBox) {
+                    threePrepData.forEach((item) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'p-2.5 rounded-2xl border border-sky-200 hover:border-sky-400 bg-sky-50/70 hover:bg-sky-100/70 transition flex items-center justify-center gap-1.5 text-xs font-extrabold text-sky-900 shadow-xs';
+                        btn.innerHTML = `<i class="fa-solid ${item.icon} text-sky-600"></i><span>${item.key}</span>`;
+                        btn.addEventListener('click', () => {
+                            addSloganToCanvas({
+                                text: item.slogan,
+                                bg: item.bg,
+                                color: item.color,
+                                font: item.font,
+                                style: item.style
+                            });
+                            updateAntiscamDetail(`【求職三備】${item.key}`, item.desc);
+                        });
+                        threeBox.appendChild(btn);
+                    });
+                }
+
+                if (sevenBox) {
+                    sevenNoData.forEach((item) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'p-2 rounded-2xl border border-rose-200 hover:border-rose-400 bg-rose-50/70 hover:bg-rose-100/70 transition flex items-center justify-center gap-1.5 text-xs font-extrabold text-rose-900 shadow-xs';
+                        btn.innerHTML = `<i class="fa-solid ${item.icon} text-rose-600"></i><span>${item.key}</span>`;
+                        btn.addEventListener('click', () => {
+                            addSloganToCanvas({
+                                text: item.slogan,
+                                bg: item.bg,
+                                color: item.color,
+                                font: item.font,
+                                style: item.style
+                            });
+                            updateAntiscamDetail(`【求職七不】${item.key}`, item.desc);
+                        });
+                        sevenBox.appendChild(btn);
+                    });
+                }
+
+                if (stickerBox) {
+                    antiscamStickersData.forEach((st) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'p-2 rounded-2xl border border-orange-200 hover:border-orange-400 bg-orange-50/40 hover:bg-white transition flex flex-col items-center justify-center gap-1 group shadow-xs';
+                        btn.title = `加入「${st.name}」防騙貼圖`;
+                        const shapeClass = st.shape === 'stamp' ? 'rounded-xl' : 'rounded-full';
+                        btn.innerHTML = `
+                            <div class="w-9 h-9 ${shapeClass} flex items-center justify-center text-base shadow-xs group-hover:scale-110 transition-transform" style="background:${st.bg}; color:${st.color}">
+                                <i class="${st.faClass}"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-600 truncate w-full text-center">${st.name}</span>
+                        `;
+                        btn.addEventListener('click', () => {
+                            addStickerToCanvas(st);
+                        });
+                        stickerBox.appendChild(btn);
+                    });
+                }
+            }
+
             function initPalettes() {
                 const sloganList = document.getElementById('slogan-list');
                 slogansData.forEach((slogan) => {
@@ -1024,6 +1290,7 @@
                 });
 
                 renderStickerPalette();
+                initAntiscamSection();
             }
 
             // --- 新增標語至畫布 ---
@@ -1176,6 +1443,15 @@
                     badgeBg: '#2dd4bf',
                     badgeText: '#042f2e',
                     title: 'FUTURE LABOR • 未來職場權益宣言'
+                },
+                antiscam: {
+                    borderOuter: '#ea580c',
+                    borderInner: '#fed7aa',
+                    headerBg: '#1e293b',
+                    headerText: '#fb923c',
+                    badgeBg: '#fb923c',
+                    badgeText: '#0f172a',
+                    title: 'JOB SAFETY • 求職防騙三備七不守護你'
                 }
             };
 
@@ -1840,12 +2116,43 @@
                 }
             }
 
+            let snapDelaySeconds = 3;
+            let isCountingDown = false;
+
+            const snapBtnLabel = document.getElementById('snap-btn-label');
+            document.querySelectorAll('.snap-delay-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    snapDelaySeconds = parseInt(btn.dataset.delay, 10);
+                    document.querySelectorAll('.snap-delay-btn').forEach(b => {
+                        const active = b === btn;
+                        b.classList.toggle('active', active);
+                        b.classList.toggle('bg-rose-600', active);
+                        b.classList.toggle('border-rose-600', active);
+                        b.classList.toggle('text-white', active);
+                        b.classList.toggle('bg-white', !active);
+                        b.classList.toggle('border-slate-200', !active);
+                        b.classList.toggle('text-slate-700', !active);
+                    });
+                    if (snapBtnLabel) {
+                        snapBtnLabel.textContent = snapDelaySeconds === 0 ? '直接自拍' : `倒數 ${snapDelaySeconds} 秒`;
+                    }
+                });
+            });
+
             function takeSnapshot() {
                 if (!state.isCameraActive) {
-                    showToast('請先點擊「開啟相機」才能倒數自拍喔！', 'fa-video text-amber-400');
+                    showToast('請先點擊「開啟相機」才能自拍喔！', 'fa-video text-amber-400');
                     return;
                 }
-                let count = 3;
+                if (isCountingDown) return;
+
+                if (snapDelaySeconds === 0) {
+                    captureFrameFromVideo();
+                    return;
+                }
+
+                isCountingDown = true;
+                let count = snapDelaySeconds;
                 countdownNumber.textContent = count;
                 countdownOverlay.classList.remove('hidden');
 
@@ -1855,10 +2162,11 @@
                         countdownNumber.textContent = count;
                     } else {
                         clearInterval(timer);
+                        isCountingDown = false;
                         countdownOverlay.classList.add('hidden');
                         captureFrameFromVideo();
                     }
-                }, 800);
+                }, 1000);
             }
 
             // 快門閃白與合成音效 (無須外部音檔)
@@ -2532,6 +2840,81 @@
                     showToast(`已套用「${btn.innerText.trim()}」防雷模板！`, 'fa-compass text-teal-400');
                 });
             });
+
+            // 一鍵套用「三備七不」求職防騙版型
+            const btnApplyAntiscam = document.getElementById('btn-apply-antiscam');
+            if (btnApplyAntiscam) {
+                btnApplyAntiscam.addEventListener('click', () => {
+                    saveHistory();
+                    state.frameTheme = 'antiscam';
+                    setFrameActiveUI('antiscam');
+                    state.items = [];
+
+                    const featuredSlogans = [
+                        threePrepData[1], // 三備｜高薪輕鬆要存疑
+                        sevenNoData[0],   // 七不｜不繳錢
+                        sevenNoData[4]    // 七不｜證件不離身
+                    ];
+                    featuredSlogans.forEach((s, i) => {
+                        state.items.push({
+                            id: 'item_anti_' + Date.now() + '_' + i,
+                            type: 'slogan',
+                            text: s.slogan,
+                            bg: s.bg,
+                            color: s.color,
+                            font: s.font,
+                            style: s.style,
+                            x: canvas.width / 2 + (i % 2 === 0 ? -45 : 55),
+                            y: 220 + i * 185,
+                            scale: 0.9,
+                            rotation: (i % 2 === 0 ? -0.06 : 0.06)
+                        });
+                    });
+
+                    const featuredStickers = [antiscamStickersData[1], antiscamStickersData[3], antiscamStickersData[5]];
+                    const stPositions = [{ x: 135, y: 190 }, { x: 665, y: 270 }, { x: 145, y: 745 }];
+                    featuredStickers.forEach((st, i) => {
+                        state.items.push({
+                            id: 'item_anti_st_' + Date.now() + '_' + i,
+                            type: 'sticker',
+                            unicode: st.unicode,
+                            color: st.color,
+                            bg: st.bg,
+                            shape: st.shape || 'circle',
+                            x: stPositions[i].x,
+                            y: stPositions[i].y,
+                            scale: 0.9,
+                            rotation: (i - 1) * 0.12
+                        });
+                    });
+
+                    selectItem(null);
+                    updateAntiscamDetail(
+                        '已套用「求職防騙三備七不」版型！',
+                        '三備（要確定、要存疑、要陪同）＋七不（不繳錢、不購買、不辦卡、不簽約、證件不離身、不飲用、不非法工作），求職面試保護自己！'
+                    );
+                    showToast('已一鍵套用「三備七不」求職防騙版型！', 'fa-shield-cat text-orange-400');
+                });
+            }
+
+            // 三備七不專區收納開合切換
+            const antiscamContent = document.getElementById('antiscam-content');
+            const btnToggleAntiscam = document.getElementById('btn-toggle-antiscam');
+            const btnToggleAntiscamTitle = document.getElementById('btn-toggle-antiscam-title');
+            const antiscamToggleText = document.getElementById('antiscam-toggle-text');
+            const antiscamToggleIcon = document.getElementById('antiscam-toggle-icon');
+
+            function toggleAntiscamSection() {
+                if (!antiscamContent) return;
+                const isHidden = antiscamContent.classList.toggle('hidden');
+                if (btnToggleAntiscam) btnToggleAntiscam.setAttribute('aria-expanded', String(!isHidden));
+                if (antiscamToggleText) antiscamToggleText.textContent = isHidden ? '展開' : '收合';
+                if (antiscamToggleIcon) {
+                    antiscamToggleIcon.classList.toggle('rotate-180', isHidden);
+                }
+            }
+            if (btnToggleAntiscam) btnToggleAntiscam.addEventListener('click', toggleAntiscamSection);
+            if (btnToggleAntiscamTitle) btnToggleAntiscamTitle.addEventListener('click', toggleAntiscamSection);
 
             // --- 勞權快問快答挑戰邏輯 ---
             const quizModal = document.getElementById('quiz-modal');
