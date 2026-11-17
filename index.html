@@ -176,11 +176,21 @@
                     </div>
                 </div>
 
-                <!-- 畫布操作提示 -->
-                <p class="text-xs text-slate-500 mt-3 flex items-center gap-1.5 font-medium text-center">
-                    <i class="fa-solid fa-hand-pointer text-amber-600"></i>
-                    提示：拖曳貼圖移動，點擊選取後可用右上角旋轉、右下角縮放，或使用下方按鈕 / 滾輪微調
-                </p>
+                <!-- 畫布操作提示與照片縮放/置中按鈕 -->
+                <div class="w-full max-w-[540px] mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 font-medium text-center">
+                    <span><i class="fa-solid fa-hand-pointer text-amber-600 mr-1"></i>拖曳貼圖／空白處可拖曳調整照片位置</span>
+                    <div class="inline-flex items-center gap-1">
+                        <button type="button" id="btn-photo-zoom-out" class="px-2 py-0.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 text-[11px] font-bold transition" title="縮小背景圖片">
+                            <i class="fa-solid fa-magnifying-glass-minus mr-0.5"></i> 縮小圖片
+                        </button>
+                        <button type="button" id="btn-photo-zoom-in" class="px-2 py-0.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 text-[11px] font-bold transition" title="放大背景圖片">
+                            <i class="fa-solid fa-magnifying-glass-plus mr-0.5"></i> 放大圖片
+                        </button>
+                        <button type="button" id="btn-reset-photo-pos" class="px-2 py-0.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 text-[11px] font-bold transition" title="將目前照片恢復置中與預設大小">
+                            <i class="fa-solid fa-crosshairs mr-0.5"></i> 照片置中
+                        </button>
+                    </div>
+                </div>
 
                 <!-- 選取貼圖控制列 (動態顯示) -->
                 <div id="sticker-controls" class="hidden w-full max-w-[540px] mt-3 bg-white px-4 py-3 rounded-2xl shadow-md border border-slate-200 space-y-2.5">
@@ -278,7 +288,7 @@
                     </div>
 
                     <!-- 經典四格專用：第 1~4 格照片槽位選擇列 -->
-                    <div id="grid-slot-bar" class="hidden pt-2.5 border-t border-slate-100 space-y-2">
+                    <div id="grid-slot-bar" class="hidden pt-2.5 border-t border-slate-100 space-y-2.5">
                         <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
                             <span><i class="fa-solid fa-images text-indigo-500 mr-1"></i>選擇要拍攝或上傳的格子（可一次多選 4 張）：</span>
                             <button type="button" id="btn-clear-grid" class="text-rose-500 hover:text-rose-600">清空四格</button>
@@ -296,6 +306,21 @@
                             <button type="button" data-slot="3" class="grid-slot-btn py-1.5 px-2 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-600 text-xs font-bold transition flex items-center justify-center gap-1">
                                 <span>第 4 格</span>
                             </button>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-[11px] text-slate-500 font-bold flex items-center justify-between">
+                                <span><i class="fa-solid fa-pen-to-square text-amber-500 mr-1"></i>自訂每格左下角文字（留白即隱藏）：</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                <input type="text" data-label-slot="0" maxlength="12" value="01 知道權益" placeholder="第1格文字"
+                                    class="grid-label-input px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:bg-white focus:outline-none text-xs font-bold text-slate-700">
+                                <input type="text" data-label-slot="1" maxlength="12" value="02 保留證據" placeholder="第2格文字"
+                                    class="grid-label-input px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:bg-white focus:outline-none text-xs font-bold text-slate-700">
+                                <input type="text" data-label-slot="2" maxlength="12" value="03 勇敢申訴" placeholder="第3格文字"
+                                    class="grid-label-input px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:bg-white focus:outline-none text-xs font-bold text-slate-700">
+                                <input type="text" data-label-slot="3" maxlength="12" value="04 守護職場" placeholder="第4格文字"
+                                    class="grid-label-input px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:bg-white focus:outline-none text-xs font-bold text-slate-700">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -585,23 +610,40 @@
                 show1955Stamp: true,
                 quizUnlocked: localStorage.getItem('labor_booth_quiz_unlocked') === '1',
                 photoImage: null,      // 單張模式已拍攝或上傳的 Image 物件
+                photoTransform: { offsetX: 0, offsetY: 0, scale: 1 }, // 單張照片位置/縮放
                 gridPhotos: [null, null, null, null], // 經典四格模式 4 張獨立照片
+                gridPhotoTransforms: [
+                    { offsetX: 0, offsetY: 0, scale: 1 },
+                    { offsetX: 0, offsetY: 0, scale: 1 },
+                    { offsetX: 0, offsetY: 0, scale: 1 },
+                    { offsetX: 0, offsetY: 0, scale: 1 }
+                ],
+                gridLabels: ['01 知道權益', '02 保留證據', '03 勇敢申訴', '04 守護職場'], // 四格左下角自訂文字
                 activeGridSlot: 0,     // 目前正在拍攝/上傳的格子索引 (0~3)
                 isCameraActive: false,
                 stream: null,
                 // 畫布上的動態物件 (標語與貼圖)
                 items: [],
                 selectedItemId: null,
-                // 互動模式: 'none' | 'drag' | 'rotate' | 'scale'
+                // 互動模式: 'none' | 'drag' | 'rotate' | 'scale' | 'pan-photo'
                 interactionMode: 'none',
                 dragOffsetX: 0,
                 dragOffsetY: 0,
+                panningPhotoSlot: -1, // -1: 單張照片, 0~3: 四格照片
+                panStartX: 0,
+                panStartY: 0,
+                panInitOffsetX: 0,
+                panInitOffsetY: 0,
                 transformStartAngle: 0,
                 transformStartRotation: 0,
                 transformStartDist: 1,
                 transformStartScale: 1,
                 hasMovedOrTransformed: false
             };
+
+            function defaultPhotoTransform() {
+                return { offsetX: 0, offsetY: 0, scale: 1 };
+            }
 
             function updateGridSlotUI() {
                 const gridSlotBar = document.getElementById('grid-slot-bar');
@@ -622,6 +664,12 @@
                         ? `<i class="fa-solid fa-circle-check text-emerald-500 text-[11px]"></i><span>第 ${idx + 1} 格</span>`
                         : `<span>第 ${idx + 1} 格</span>`;
                 });
+                document.querySelectorAll('.grid-label-input').forEach(inp => {
+                    const idx = parseInt(inp.dataset.labelSlot, 10);
+                    if (document.activeElement !== inp) {
+                        inp.value = state.gridLabels[idx] !== undefined ? state.gridLabels[idx] : '';
+                    }
+                });
             }
 
             // --- 復原 / 重做 (Undo / Redo) 系統 ---
@@ -636,6 +684,9 @@
                     layoutMode: state.layoutMode,
                     filterMode: state.filterMode,
                     show1955Stamp: state.show1955Stamp,
+                    gridLabels: [...state.gridLabels],
+                    photoTransform: { ...state.photoTransform },
+                    gridPhotoTransforms: state.gridPhotoTransforms.map(t => ({ ...t })),
                     items: JSON.parse(JSON.stringify(state.items))
                 };
             }
@@ -656,6 +707,9 @@
                 state.layoutMode = snapshot.layoutMode || 'single';
                 state.filterMode = snapshot.filterMode || 'none';
                 state.show1955Stamp = snapshot.show1955Stamp !== undefined ? snapshot.show1955Stamp : true;
+                if (snapshot.gridLabels) state.gridLabels = [...snapshot.gridLabels];
+                if (snapshot.photoTransform) state.photoTransform = { ...snapshot.photoTransform };
+                if (snapshot.gridPhotoTransforms) state.gridPhotoTransforms = snapshot.gridPhotoTransforms.map(t => ({ ...t }));
                 state.items = JSON.parse(JSON.stringify(snapshot.items));
 
                 const toggle1955 = document.getElementById('toggle-1955-stamp');
@@ -1136,6 +1190,22 @@
                 }
             }
 
+            // 計算四格拍貼的各格區域座標
+            function getGridCells(W, H) {
+                const padTop = 120;
+                const padBottom = 165;
+                const padSide = 52;
+                const gap = 14;
+                const cellW = (W - padSide * 2 - gap) / 2;
+                const cellH = (H - padTop - padBottom - gap) / 2;
+                return [
+                    { x: padSide, y: padTop, w: cellW, h: cellH },
+                    { x: padSide + cellW + gap, y: padTop, w: cellW, h: cellH },
+                    { x: padSide, y: padTop + cellH + gap, w: cellW, h: cellH },
+                    { x: padSide + cellW + gap, y: padTop + cellH + gap, w: cellW, h: cellH }
+                ];
+            }
+
             // --- 繪製背景照片或預設示意畫面 (支援濾鏡與經典四格多張獨立照片) ---
             function drawBackgroundMedia() {
                 const W = canvas.width;
@@ -1148,71 +1218,62 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, W, H);
 
-                    const padTop = 120;
-                    const padBottom = 165;
-                    const padSide = 52;
-                    const gap = 14;
-                    const cellW = (W - padSide * 2 - gap) / 2;
-                    const cellH = (H - padTop - padBottom - gap) / 2;
-
-                    const cells = [
-                        { x: padSide, y: padTop, label: '01 知道權益' },
-                        { x: padSide + cellW + gap, y: padTop, label: '02 保留證據' },
-                        { x: padSide, y: padTop + cellH + gap, label: '03 勇敢申訴' },
-                        { x: padSide + cellW + gap, y: padTop + cellH + gap, label: '04 守護職場' }
-                    ];
+                    const cells = getGridCells(W, H);
 
                     cells.forEach((cell, idx) => {
                         const slotImg = state.gridPhotos[idx];
                         ctx.save();
-                        roundRect(ctx, cell.x, cell.y, cellW, cellH, 12);
+                        roundRect(ctx, cell.x, cell.y, cell.w, cell.h, 12);
                         ctx.clip();
 
                         if (isVideoMirror && idx === state.activeGridSlot) {
                             // 目前正在拍攝的格子顯示即時相機畫面
                             ctx.filter = getCanvasFilterString();
                             ctx.save();
-                            ctx.translate(cell.x + cellW, cell.y);
+                            ctx.translate(cell.x + cell.w, cell.y);
                             ctx.scale(-1, 1);
-                            drawImageCover(ctx, video, 0, 0, cellW, cellH);
+                            drawImageCover(ctx, video, 0, 0, cell.w, cell.h);
                             ctx.restore();
                         } else if (slotImg) {
                             ctx.filter = getCanvasFilterString();
-                            drawImageCover(ctx, slotImg, cell.x, cell.y, cellW, cellH);
+                            drawImageCover(ctx, slotImg, cell.x, cell.y, cell.w, cell.h, state.gridPhotoTransforms[idx]);
                         } else if (isVideoMirror) {
                             // 相機運作中但非當前拍攝格，顯示待機提示
                             ctx.fillStyle = '#1e293b';
-                            ctx.fillRect(cell.x, cell.y, cellW, cellH);
+                            ctx.fillRect(cell.x, cell.y, cell.w, cell.h);
                             ctx.font = '700 20px "Noto Sans TC", sans-serif';
                             ctx.fillStyle = '#94a3b8';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
-                            ctx.fillText(`第 ${idx + 1} 格待拍`, cell.x + cellW / 2, cell.y + cellH / 2);
+                            ctx.fillText(`第 ${idx + 1} 格待拍`, cell.x + cell.w / 2, cell.y + cell.h / 2);
                         } else {
                             // 空白格佔位提示
                             ctx.fillStyle = idx === state.activeGridSlot ? '#334155' : '#1e293b';
-                            ctx.fillRect(cell.x, cell.y, cellW, cellH);
+                            ctx.fillRect(cell.x, cell.y, cell.w, cell.h);
                             ctx.font = '700 20px "Noto Sans TC", sans-serif';
                             ctx.fillStyle = idx === state.activeGridSlot ? '#fbbf24' : '#94a3b8';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
-                            ctx.fillText(`第 ${idx + 1} 格・待拍/上傳`, cell.x + cellW / 2, cell.y + cellH / 2);
+                            ctx.fillText(`第 ${idx + 1} 格・待拍/上傳`, cell.x + cell.w / 2, cell.y + cell.h / 2);
                         }
                         ctx.restore();
 
-                        // 繪製四格教育步驟小標籤 (無濾鏡)
-                        ctx.save();
-                        const tagW = 112;
-                        const tagH = 24;
-                        roundRect(ctx, cell.x + 8, cell.y + cellH - tagH - 8, tagW, tagH, 8);
-                        ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
-                        ctx.fill();
-                        ctx.font = '700 13px "Noto Sans TC", sans-serif';
-                        ctx.fillStyle = '#fbbf24';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(cell.label, cell.x + 8 + tagW / 2, cell.y + cellH - tagH / 2 - 7);
-                        ctx.restore();
+                        // 繪製四格左下角自訂文字標籤 (若留白則隱藏)
+                        const customLabel = (state.gridLabels[idx] || '').trim();
+                        if (customLabel) {
+                            ctx.save();
+                            ctx.font = '700 13px "Noto Sans TC", sans-serif';
+                            const labelW = Math.min(cell.w - 16, Math.max(64, ctx.measureText(customLabel).width + 20));
+                            const tagH = 24;
+                            roundRect(ctx, cell.x + 8, cell.y + cell.h - tagH - 8, labelW, tagH, 8);
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+                            ctx.fill();
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(customLabel, cell.x + 8 + labelW / 2, cell.y + cell.h - tagH / 2 - 7, labelW - 10);
+                            ctx.restore();
+                        }
                     });
 
                     ctx.restore();
@@ -1224,7 +1285,7 @@
                         ctx.scale(-1, 1);
                         drawImageCover(ctx, video, 0, 0, W, H);
                     } else {
-                        drawImageCover(ctx, state.photoImage, 0, 0, W, H);
+                        drawImageCover(ctx, state.photoImage, 0, 0, W, H, state.photoTransform);
                     }
                     ctx.restore();
                 } else {
@@ -1270,26 +1331,26 @@
                 }
             }
 
-            // 模擬 CSS object-fit: cover
-            function drawImageCover(ctx, img, x, y, w, h) {
+            // 模擬 CSS object-fit: cover 並支援使用者自訂偏移與縮放
+            function drawImageCover(ctx, img, x, y, w, h, transform) {
                 const iw = img.videoWidth || img.width;
                 const ih = img.videoHeight || img.height;
                 if (!iw || !ih) return;
-                const r = Math.min(w / iw, h / ih);
-                let nw = iw * r, nh = ih * r, cx, cy, cw, ch, ar = 1;
-                if (nw < w) ar = w / nw;
-                if (Math.abs(ar - 1) < 1e-14 && nh < h) ar = h / nh;
-                nw *= ar;
-                nh *= ar;
-                cw = iw / (nw / w);
-                ch = ih / (nh / h);
-                cx = (iw - cw) * 0.5;
-                cy = (ih - ch) * 0.5;
-                if (cx < 0) cx = 0;
-                if (cy < 0) cy = 0;
-                if (cw > iw) cw = iw;
-                if (ch > ih) ch = ih;
-                ctx.drawImage(img, cx, cy, cw, ch, x, y, w, h);
+                const userScale = transform ? (transform.scale || 1) : 1;
+                const offsetX = transform ? (transform.offsetX || 0) : 0;
+                const offsetY = transform ? (transform.offsetY || 0) : 0;
+                const coverScale = Math.max(w / iw, h / ih) * userScale;
+                const drawW = iw * coverScale;
+                const drawH = ih * coverScale;
+                const drawX = x + (w - drawW) / 2 + offsetX;
+                const drawY = y + (h - drawH) / 2 + offsetY;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(x, y, w, h);
+                ctx.clip();
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                ctx.restore();
             }
 
             // --- 繪製拍貼相框與「勞動權益大使 XXX」置中徽章 ---
@@ -1872,6 +1933,7 @@
                         showToast('經典四格 4 張自拍全部完成！', 'fa-circle-check text-emerald-400');
                     } else {
                         state.photoImage = img;
+                        state.photoTransform = defaultPhotoTransform();
                         state.isCameraActive = false;
                         if (state.stream) {
                             state.stream.getTracks().forEach(t => t.stop());
@@ -1908,14 +1970,15 @@
                                     ? state.activeGridSlot
                                     : idx;
                                 state.gridPhotos[targetSlot] = img;
+                                state.gridPhotoTransforms[targetSlot] = defaultPhotoTransform();
                                 if (!state.photoImage) state.photoImage = img;
                                 loadedCount++;
                                 if (loadedCount === filesToLoad.length) {
                                     if (filesToLoad.length === 1) {
                                         state.activeGridSlot = (state.activeGridSlot + 1) % 4;
-                                        showToast(`已上傳至第 ${targetSlot + 1} 格！`, 'fa-image text-emerald-400');
+                                        showToast(`已上傳至第 ${targetSlot + 1} 格！可拖曳調整位置`, 'fa-image text-emerald-400');
                                     } else {
-                                        showToast(`已成功載入 ${filesToLoad.length} 張四格照片！`, 'fa-images text-emerald-400');
+                                        showToast(`已成功載入 ${filesToLoad.length} 張四格照片！可拖曳各格調整位置`, 'fa-images text-emerald-400');
                                     }
                                     updateGridSlotUI();
                                 }
@@ -1930,7 +1993,8 @@
                         const img = new Image();
                         img.onload = () => {
                             state.photoImage = img;
-                            showToast('照片上傳成功！', 'fa-image text-emerald-400');
+                            state.photoTransform = defaultPhotoTransform();
+                            showToast('照片上傳成功！可拖曳畫布空白處調整照片位置', 'fa-image text-emerald-400');
                         };
                         img.src = event.target.result;
                     };
@@ -2013,13 +2077,57 @@
                     }
                 }
 
-                // 3. 點擊空白處取消選取
+                // 3. 點擊空白處取消選取貼圖，並檢查是否可拖曳調整背景照片位置
                 selectItem(null);
+
+                if (state.isCameraActive) return;
+
+                if (state.layoutMode === 'grid4') {
+                    const cells = getGridCells(canvas.width, canvas.height);
+                    const hitSlot = cells.findIndex(c => pos.x >= c.x && pos.x <= c.x + c.w && pos.y >= c.y && pos.y <= c.y + c.h);
+                    if (hitSlot !== -1) {
+                        state.activeGridSlot = hitSlot;
+                        updateGridSlotUI();
+                        if (state.gridPhotos[hitSlot]) {
+                            pendingPreTransformSnapshot = createSnapshot();
+                            state.interactionMode = 'pan-photo';
+                            state.panningPhotoSlot = hitSlot;
+                            state.panStartX = pos.x;
+                            state.panStartY = pos.y;
+                            state.panInitOffsetX = state.gridPhotoTransforms[hitSlot].offsetX;
+                            state.panInitOffsetY = state.gridPhotoTransforms[hitSlot].offsetY;
+                        }
+                    }
+                } else if (state.photoImage) {
+                    pendingPreTransformSnapshot = createSnapshot();
+                    state.interactionMode = 'pan-photo';
+                    state.panningPhotoSlot = -1;
+                    state.panStartX = pos.x;
+                    state.panStartY = pos.y;
+                    state.panInitOffsetX = state.photoTransform.offsetX;
+                    state.panInitOffsetY = state.photoTransform.offsetY;
+                }
             }
 
             function handlePointerMove(clientX, clientY) {
-                if (state.interactionMode === 'none' || !state.selectedItemId) return;
+                if (state.interactionMode === 'none') return;
                 const pos = getCanvasCoords(clientX, clientY);
+
+                if (state.interactionMode === 'pan-photo') {
+                    const dx = pos.x - state.panStartX;
+                    const dy = pos.y - state.panStartY;
+                    const t = state.panningPhotoSlot === -1
+                        ? state.photoTransform
+                        : state.gridPhotoTransforms[state.panningPhotoSlot];
+                    if (t) {
+                        t.offsetX = state.panInitOffsetX + dx;
+                        t.offsetY = state.panInitOffsetY + dy;
+                        state.hasMovedOrTransformed = true;
+                    }
+                    return;
+                }
+
+                if (!state.selectedItemId) return;
                 const item = state.items.find(i => i.id === state.selectedItemId);
                 if (!item) return;
 
@@ -2055,21 +2163,44 @@
             window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
             window.addEventListener('mouseup', handlePointerUp);
 
-            // 滑鼠滾輪快速縮放選取中的貼圖/標語
+            // 滑鼠滾輪快速縮放選取中的貼圖/標語，或未選取時縮放背景照片
             let wheelHistoryTimer = null;
             canvas.addEventListener('wheel', (e) => {
-                if (!state.selectedItemId) return;
-                const item = state.items.find(i => i.id === state.selectedItemId);
-                if (!item) return;
-                e.preventDefault();
-                if (!wheelHistoryTimer) {
-                    saveHistory();
-                }
-                clearTimeout(wheelHistoryTimer);
-                wheelHistoryTimer = setTimeout(() => { wheelHistoryTimer = null; }, 400);
+                if (state.selectedItemId) {
+                    const item = state.items.find(i => i.id === state.selectedItemId);
+                    if (!item) return;
+                    e.preventDefault();
+                    if (!wheelHistoryTimer) saveHistory();
+                    clearTimeout(wheelHistoryTimer);
+                    wheelHistoryTimer = setTimeout(() => { wheelHistoryTimer = null; }, 400);
 
-                const delta = e.deltaY < 0 ? 0.08 : -0.08;
-                item.scale = Math.max(0.35, Math.min(3.0, item.scale + delta));
+                    const delta = e.deltaY < 0 ? 0.08 : -0.08;
+                    item.scale = Math.max(0.35, Math.min(3.0, item.scale + delta));
+                    return;
+                }
+
+                // 未選取貼圖時：縮放游標所在的背景照片
+                if (state.isCameraActive) return;
+                const pos = getCanvasCoords(e.clientX, e.clientY);
+                let targetTransform = null;
+                if (state.layoutMode === 'grid4') {
+                    const cells = getGridCells(canvas.width, canvas.height);
+                    const hitSlot = cells.findIndex(c => pos.x >= c.x && pos.x <= c.x + c.w && pos.y >= c.y && pos.y <= c.y + c.h);
+                    if (hitSlot !== -1 && state.gridPhotos[hitSlot]) {
+                        targetTransform = state.gridPhotoTransforms[hitSlot];
+                    }
+                } else if (state.photoImage) {
+                    targetTransform = state.photoTransform;
+                }
+                if (targetTransform) {
+                    e.preventDefault();
+                    if (!wheelHistoryTimer) saveHistory();
+                    clearTimeout(wheelHistoryTimer);
+                    wheelHistoryTimer = setTimeout(() => { wheelHistoryTimer = null; }, 400);
+
+                    const delta = e.deltaY < 0 ? 0.08 : -0.08;
+                    targetTransform.scale = Math.max(0.5, Math.min(3.0, targetTransform.scale + delta));
+                }
             }, { passive: false });
 
             canvas.addEventListener('touchstart', (e) => {
@@ -2287,6 +2418,20 @@
                     showToast('已清空四格照片，可重新拍攝或上傳', 'fa-broom text-amber-400');
                 });
             }
+
+            // 經典四格左下角文字即時編輯
+            let gridLabelTimer = null;
+            document.querySelectorAll('.grid-label-input').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const idx = parseInt(inp.dataset.labelSlot, 10);
+                    if (!gridLabelTimer) {
+                        saveHistory();
+                    }
+                    clearTimeout(gridLabelTimer);
+                    gridLabelTimer = setTimeout(() => { gridLabelTimer = null; }, 600);
+                    state.gridLabels[idx] = e.target.value;
+                });
+            });
 
             // 拍貼濾鏡切換
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -2515,11 +2660,62 @@
                 showToast('已清空所有貼圖與標語', 'fa-broom text-amber-400');
             });
 
+            function adjustActivePhotoZoom(delta) {
+                if (state.layoutMode === 'grid4') {
+                    const slot = state.activeGridSlot;
+                    if (!state.gridPhotos[slot]) {
+                        showToast(`第 ${slot + 1} 格尚未放入照片喔！`, 'fa-image text-amber-400');
+                        return;
+                    }
+                    saveHistory();
+                    const t = state.gridPhotoTransforms[slot];
+                    t.scale = Math.max(0.5, Math.min(3.0, +(t.scale + delta).toFixed(2)));
+                } else {
+                    if (!state.photoImage) {
+                        showToast('請先拍照或上傳照片喔！', 'fa-image text-amber-400');
+                        return;
+                    }
+                    saveHistory();
+                    state.photoTransform.scale = Math.max(0.5, Math.min(3.0, +(state.photoTransform.scale + delta).toFixed(2)));
+                }
+            }
+
+            const btnPhotoZoomOut = document.getElementById('btn-photo-zoom-out');
+            const btnPhotoZoomIn = document.getElementById('btn-photo-zoom-in');
+            if (btnPhotoZoomOut) btnPhotoZoomOut.addEventListener('click', () => adjustActivePhotoZoom(-0.12));
+            if (btnPhotoZoomIn) btnPhotoZoomIn.addEventListener('click', () => adjustActivePhotoZoom(0.12));
+
+            const btnResetPhotoPos = document.getElementById('btn-reset-photo-pos');
+            if (btnResetPhotoPos) {
+                btnResetPhotoPos.addEventListener('click', () => {
+                    saveHistory();
+                    if (state.layoutMode === 'grid4') {
+                        state.gridPhotoTransforms = [
+                            defaultPhotoTransform(),
+                            defaultPhotoTransform(),
+                            defaultPhotoTransform(),
+                            defaultPhotoTransform()
+                        ];
+                    } else {
+                        state.photoTransform = defaultPhotoTransform();
+                    }
+                    showToast('已將照片恢復置中與預設大小', 'fa-crosshairs text-amber-400');
+                });
+            }
+
             btnResetAll.addEventListener('click', () => {
                 saveHistory();
                 state.items = [];
                 state.photoImage = null;
+                state.photoTransform = defaultPhotoTransform();
                 state.gridPhotos = [null, null, null, null];
+                state.gridPhotoTransforms = [
+                    defaultPhotoTransform(),
+                    defaultPhotoTransform(),
+                    defaultPhotoTransform(),
+                    defaultPhotoTransform()
+                ];
+                state.gridLabels = ['01 知道權益', '02 保留證據', '03 勇敢申訴', '04 守護職場'];
                 state.activeGridSlot = 0;
                 state.ambassadorName = '';
                 inputAmbassador.value = '';
